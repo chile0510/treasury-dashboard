@@ -295,6 +295,11 @@ function setupTabs() {
 
 // === INIT ===
 function renderAll() {
+    // Set today's date
+    const today = new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    document.getElementById('report-date-text').textContent = today;
+    document.getElementById('footer-date').textContent = today;
+
     renderKPIs();
     renderAllocationChart();
     renderBarChart('chartLoanDist', DATA.loanByBank, 'Dư nợ', CHART_COLORS);
