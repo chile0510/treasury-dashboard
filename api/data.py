@@ -26,7 +26,11 @@ def _get_origin(headers):
     origin = headers.get("Origin", "")
     if origin in ALLOWED_ORIGINS:
         return origin
-    return None  # reject unknown origins
+    # Same-origin requests may not include Origin header — allow them
+    # Security: session cookie is SameSite=Strict, so cross-site can't send it
+    if not origin:
+        return ALLOWED_ORIGINS[1]  # default to production origin
+    return None  # reject unknown cross-origin requests
 
 
 def _b64url_decode(s: str) -> bytes:
@@ -198,6 +202,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"ok": False, "error": "Forbidden"}).encode())
             return
+
         user = _verify_session(self.headers)
 
         if not user:

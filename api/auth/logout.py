@@ -25,7 +25,9 @@ def _get_origin(headers):
     origin = headers.get("Origin", "")
     if origin in ALLOWED_ORIGINS:
         return origin
-    return None  # reject unknown origins
+    if not origin:
+        return ALLOWED_ORIGINS[1]
+    return None
 
 
 def _b64url_decode(s: str) -> bytes:
