@@ -282,10 +282,10 @@ body {
 .kpi-spread .kpi-value { color: var(--accent-purple); }
 .kpi-pl .kpi-value { color: var(--accent-cyan); }
 .kpi-tsdb .kpi-value { color: var(--accent-yellow); }
-.kpi-tsdb-yield .kpi-value { color: var(--accent-orange); }
+.kpi-hanmuc .kpi-value { color: var(--accent-orange); }
 
 .kpi-tsdb::before { background: var(--gradient-amber); }
-.kpi-tsdb-yield::before { background: linear-gradient(135deg, #fb923c, #ea580c); }
+.kpi-hanmuc::before { background: linear-gradient(135deg, #fb923c, #ea580c); }
 
 .kpi-sub {
     font-size: 0.78rem;
@@ -651,6 +651,15 @@ body {
 .insight-card:nth-child(2) .insight-number {
     background: rgba(248,113,113,0.15);
     color: var(--accent-red);
+}
+
+.insight-card:nth-child(3) .insight-number {
+    background: rgba(96,165,250,0.15);
+    color: var(--accent-blue);
+}
+
+.insight-card-full {
+    grid-column: 1 / -1;
 }
 
 .insight-title {
