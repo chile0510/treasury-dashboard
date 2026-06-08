@@ -79,8 +79,7 @@ let DATA = {
 
 // === UTILITIES ===
 function formatVND(num) {
-    if (Math.abs(num) >= 1e12) return (num / 1e12).toFixed(1) + ' nghìn tỷ';
-    if (Math.abs(num) >= 1e9) return (num / 1e9).toFixed(1) + ' tỷ';
+    if (Math.abs(num) >= 1e9) return Math.round(num / 1e9).toLocaleString('vi-VN') + ' tỷ';
     if (Math.abs(num) >= 1e6) return (num / 1e6).toFixed(0) + ' triệu';
     return num.toLocaleString('vi-VN');
 }
