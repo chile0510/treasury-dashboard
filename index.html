@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury Portfolio Manager — Dashboard</title>
+    <meta name="description" content="Dashboard quản trị nguồn vốn và đầu tư: Net Carry Trade, Kiểm soát hạn mức, Cảnh báo rủi ro thanh khoản">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header id="app-header">
+        <div class="header-left">
+            <div class="logo-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <div>
+                <h1 id="page-title">Treasury Portfolio Manager</h1>
+                <p class="header-subtitle">Hệ thống Quản trị Nguồn vốn & Đầu tư</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-badge" id="report-date">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>26/04/2026</span>
+            </div>
+            <div class="header-badge status-live">
+                <span class="pulse-dot"></span>
+                <span>LIVE</span>
+            </div>
+        </div>
+    </header>
+
+    <main id="dashboard-main">
+        <!-- ====== SECTION 1: NET CARRY TRADE ====== -->
+        <section class="dashboard-section" id="section-carry-trade">
+            <div class="section-header">
+                <h2><span class="section-icon">📊</span> Tổng Quan Hiệu Suất <span class="section-tag">NET CARRY TRADE</span></h2>
+            </div>
+            
+            <div class="kpi-grid">
+                <div class="kpi-card kpi-loan" id="kpi-loan">
+                    <div class="kpi-label">Tổng Nguồn Vốn Vay</div>
+                    <div class="kpi-value" id="kpi-loan-value">—</div>
+                    <div class="kpi-sub">Chi phí vốn BQ: <span class="kpi-highlight danger" id="kpi-funding-rate">—</span></div>
+                    <div class="kpi-icon-bg">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.15"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-invest" id="kpi-invest">
+                    <div class="kpi-label">Tổng Tài Sản Đầu Tư</div>
+                    <div class="kpi-value" id="kpi-invest-value">—</div>
+                    <div class="kpi-sub">Lợi suất BQ: <span class="kpi-highlight success" id="kpi-invest-yield">—</span></div>
+                    <div class="kpi-icon-bg">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.15"><polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/><polyline points="16,7 22,7 22,13"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-spread" id="kpi-spread">
+                    <div class="kpi-label">Net Spread</div>
+                    <div class="kpi-value" id="kpi-spread-value">—</div>
+                    <div class="kpi-sub">Biên lợi nhuận ròng</div>
+                    <div class="kpi-icon-bg">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.15"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-pl" id="kpi-pl">
+                    <div class="kpi-label">Net P&L</div>
+                    <div class="kpi-value" id="kpi-pl-value">—</div>
+                    <div class="kpi-sub">Lãi ròng tuyệt đối</div>
+                    <div class="kpi-icon-bg">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.15"><circle cx="12" cy="12" r="10"/><path d="M16 8l-4 4-4-4"/><path d="M12 12v6"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-tsdb" id="kpi-tsdb">
+                    <div class="kpi-label">Tổng TSĐB</div>
+                    <div class="kpi-value" id="kpi-tsdb-value">—</div>
+                    <div class="kpi-sub">Tài sản đảm bảo</div>
+                    <div class="kpi-icon-bg">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.15"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-tsdb-yield" id="kpi-tsdb-yield">
+                    <div class="kpi-label">Lợi suất BQ TSĐB</div>
+                    <div class="kpi-value" id="kpi-tsdb-yield-value">—</div>
+                    <div class="kpi-sub">Lãi tiền gửi đảm bảo</div>
+                    <div class="kpi-icon-bg">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.15"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-row">
+                <div class="chart-card" id="chart-allocation-card">
+                    <h3>Asset Allocation</h3>
+                    <div class="chart-container-doughnut">
+                        <canvas id="chartAllocation"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card" id="chart-loan-dist-card">
+                    <h3>Phân bổ Khoản Vay theo Ngân hàng</h3>
+                    <div class="chart-container">
+                        <canvas id="chartLoanDist"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card" id="chart-invest-dist-card">
+                    <h3>Phân bổ Đầu Tư theo Đối tác</h3>
+                    <div class="chart-container">
+                        <canvas id="chartInvestDist"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== SECTION 2: LIMIT CONTROLS ====== -->
+        <section class="dashboard-section" id="section-limits">
+            <div class="section-header">
+                <h2><span class="section-icon">🚨</span> Kiểm Soát Hạn Mức <span class="section-tag warning">LIMIT CONTROLS</span></h2>
+            </div>
+            <div class="limits-grid" id="limits-grid">
+                <!-- generated by JS -->
+            </div>
+        </section>
+
+        <!-- ====== SECTION 3: EXCEPTION REPORT ====== -->
+        <section class="dashboard-section" id="section-exceptions">
+            <div class="section-header">
+                <h2><span class="section-icon">⚠️</span> Cảnh Báo Ngoại Lệ <span class="section-tag danger">EXCEPTION REPORT</span></h2>
+            </div>
+
+            <!-- Tab navigation -->
+            <div class="tab-nav" id="exception-tabs">
+                <button class="tab-btn active" data-tab="tab-duration" id="btn-tab-duration">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+                    Duration Mismatch <span class="tab-count" id="count-duration">0</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-tsdb" id="btn-tab-tsdb">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    TSĐB Bất thường <span class="tab-count" id="count-tsdb">0</span>
+                </button>
+            </div>
+
+            <div class="tab-content active" id="tab-duration">
+                <table class="data-table" id="table-duration">
+                    <thead>
+                        <tr>
+                            <th>Đầu tư</th>
+                            <th>Khoản vay</th>
+                            <th>Đáo hạn ĐT</th>
+                            <th>Đáo hạn Vay</th>
+                            <th>Lệch (ngày)</th>
+                            <th>Số tiền ĐT</th>
+                            <th>Mức rủi ro</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-duration"></tbody>
+                </table>
+            </div>
+            <div class="tab-content" id="tab-tsdb">
+                <table class="data-table" id="table-tsdb">
+                    <thead>
+                        <tr>
+                            <th>Ngân hàng</th>
+                            <th>Số tiền TSĐB</th>
+                            <th>Lý do</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-tsdb"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ====== SECTION 4: DETAIL TABLES ====== -->
+        <section class="dashboard-section" id="section-details">
+            <div class="section-header">
+                <h2><span class="section-icon">📋</span> Chi Tiết Danh Mục <span class="section-tag">PORTFOLIO DETAIL</span></h2>
+            </div>
+
+            <div class="tab-nav" id="detail-tabs">
+                <button class="tab-btn active" data-tab="tab-loans" id="btn-tab-loans">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    Khoản Vay (W/C) <span class="tab-count" id="count-loans">0</span>
+                </button>
+                <button class="tab-btn" data-tab="tab-investments" id="btn-tab-investments">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/><polyline points="16,7 22,7 22,13"/></svg>
+                    Đầu Tư <span class="tab-count" id="count-investments">0</span>
+                </button>
+            </div>
+
+            <div class="tab-content active" id="tab-loans">
+                <table class="data-table" id="table-loans">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Ngân hàng</th>
+                            <th>Số tiền</th>
+                            <th>Lãi suất</th>
+                            <th>Ngày vay</th>
+                            <th>Đáo hạn</th>
+                            <th>Còn lại</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-loans"></tbody>
+                </table>
+            </div>
+            <div class="tab-content" id="tab-investments">
+                <table class="data-table" id="table-investments">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Đối tác</th>
+                            <th>Loại</th>
+                            <th>Số tiền</th>
+                            <th>Lãi suất</th>
+                            <th>Ngày mua</th>
+                            <th>Đáo hạn</th>
+                            <th>Còn lại</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-investments"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ====== SECTION 5: INSIGHTS ====== -->
+        <section class="dashboard-section" id="section-insights">
+            <div class="section-header">
+                <h2><span class="section-icon">💡</span> Khuyến Nghị Hành Động <span class="section-tag success">ACTIONABLE INSIGHTS</span></h2>
+            </div>
+            <div class="insights-grid" id="insights-grid">
+                <!-- generated by JS -->
+            </div>
+        </section>
+    </main>
+
+    <footer id="app-footer">
+        <p>Treasury Portfolio Manager AI — Dữ liệu tính đến ngày 26/04/2026</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
