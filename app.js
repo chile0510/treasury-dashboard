@@ -6,6 +6,34 @@
 
 let DATA = null;
 
+// === SAFE DOM HELPERS (XSS Prevention) ===
+function el(tag, className, textContent) {
+    const e = document.createElement(tag);
+    if (className) e.className = className;
+    if (textContent !== undefined) e.textContent = textContent;
+    return e;
+}
+
+function addCells(tr, cells) {
+    cells.forEach(c => {
+        const td = document.createElement('td');
+        if (c.className) td.className = c.className;
+        if (c.style) td.style.cssText = c.style;
+        if (c.html === true && c.el) {
+            td.appendChild(c.el);
+        } else {
+            td.textContent = c.text || '';
+        }
+        if (c.strong) {
+            const s = document.createElement('strong');
+            s.textContent = c.text;
+            td.textContent = '';
+            td.appendChild(s);
+        }
+        tr.appendChild(td);
+    });
+}
+
 // === UTILITIES ===
 function formatVND(num) {
     if (Math.abs(num) >= 1e9) return Math.round(num / 1e9).toLocaleString('vi-VN') + ' tỷ';
@@ -76,71 +104,125 @@ function renderBarChart(canvasId, data, label, colors) {
 // === LIMITS ===
 function renderLimits() {
     const grid = document.getElementById('limits-grid');
-    grid.innerHTML = '';
+    grid.textContent = '';
     DATA.limitControls.forEach((lc, idx) => {
         const icon = lc.status === 'danger' ? '🔴' : '🟢';
         const card = document.createElement('div');
         card.className = `limit-card ${lc.status}`;
-        card.id = `limit-card-${lc.bank}`;
-        card.innerHTML = `
-            <div class="limit-top"><span class="limit-bank">${icon} ${lc.bank}</span><span class="limit-status-badge ${lc.status}">${lc.status === 'danger' ? 'Cạn Room' : 'Còn Room'}</span></div>
-            <div class="limit-values"><span>Dư nợ: ${formatVND(lc.duNo)}</span><span>Hạn mức: ${formatVND(lc.hanMuc)}</span></div>
-            <div class="limit-progress"><div class="limit-progress-bar" style="width:0%"></div></div>
-            <div class="limit-util">${lc.util}%</div>
-            <div class="limit-room">Room: ${formatVND(lc.room)}</div>`;
+        card.id = `limit-card-${idx}`;
+
+        const top = el('div', 'limit-top');
+        top.appendChild(el('span', 'limit-bank', icon + ' ' + lc.bank));
+        top.appendChild(el('span', 'limit-status-badge ' + lc.status, lc.status === 'danger' ? 'Cạn Room' : 'Còn Room'));
+
+        const vals = el('div', 'limit-values');
+        vals.appendChild(el('span', null, 'Dư nợ: ' + formatVND(lc.duNo)));
+        vals.appendChild(el('span', null, 'Hạn mức: ' + formatVND(lc.hanMuc)));
+
+        const prog = el('div', 'limit-progress');
+        const bar = el('div', 'limit-progress-bar');
+        bar.style.width = '0%';
+        prog.appendChild(bar);
+
+        card.appendChild(top);
+        card.appendChild(vals);
+        card.appendChild(prog);
+        card.appendChild(el('div', 'limit-util', lc.util + '%'));
+        card.appendChild(el('div', 'limit-room', 'Room: ' + formatVND(lc.room)));
+
         grid.appendChild(card);
-        setTimeout(() => { card.querySelector('.limit-progress-bar').style.width = lc.util + '%'; }, 300 + idx * 150);
+        setTimeout(() => { bar.style.width = lc.util + '%'; }, 300 + idx * 150);
     });
 }
 
 // === TABLES ===
 function renderDurationMismatch() {
     const tbody = document.getElementById('tbody-duration');
-    tbody.innerHTML = '';
+    tbody.textContent = '';
     document.getElementById('count-duration').textContent = DATA.durationMismatches.length;
-    if (DATA.durationMismatches.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--accent-green);padding:24px;">✅ Tất cả các khoản khớp kỳ hạn</td></tr>'; return; }
+    if (DATA.durationMismatches.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 7; td.style.cssText = 'text-align:center;color:var(--accent-green);padding:24px;';
+        td.textContent = '✅ Tất cả các khoản khớp kỳ hạn';
+        tr.appendChild(td); tbody.appendChild(tr); return;
+    }
     DATA.durationMismatches.forEach(dm => {
         let rc = 'low', rl = 'Thấp';
         if (dm.daysDiff > 30) { rc = 'high'; rl = 'Cao'; } else if (dm.daysDiff > 10) { rc = 'medium'; rl = 'TB'; }
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td><strong>${dm.investBank}</strong></td><td>${dm.loanBank}</td><td>${formatDate(dm.investEnd)}</td><td>${formatDate(dm.loanEnd)}</td><td class="cell-days" style="color:${rc === 'high' ? 'var(--accent-red)' : rc === 'medium' ? 'var(--accent-yellow)' : 'var(--accent-green)'}">+${dm.daysDiff} ngày</td><td class="cell-amount">${formatVND(dm.investAmt)}</td><td><span class="risk-badge ${rc}">${rl}</span></td>`;
+        addCells(tr, [
+            { text: dm.investBank, strong: true },
+            { text: dm.loanBank },
+            { text: formatDate(dm.investEnd) },
+            { text: formatDate(dm.loanEnd) },
+            { text: '+' + dm.daysDiff + ' ngày', className: 'cell-days', style: 'color:' + (rc === 'high' ? 'var(--accent-red)' : rc === 'medium' ? 'var(--accent-yellow)' : 'var(--accent-green)') },
+            { text: formatVND(dm.investAmt), className: 'cell-amount' },
+            { html: true, el: el('span', 'risk-badge ' + rc, rl) }
+        ]);
         tbody.appendChild(tr);
     });
 }
 
 function renderTSDB() {
     const tbody = document.getElementById('tbody-tsdb');
-    tbody.innerHTML = '';
+    tbody.textContent = '';
     document.getElementById('count-tsdb').textContent = DATA.tsdbAnomalies.length;
     DATA.tsdbAnomalies.forEach(a => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td><strong>${a.bank}</strong></td><td class="cell-amount">${formatVND(a.amount)}</td><td>${a.reasons.map(r => `<span class="risk-badge high">${r}</span>`).join(' ')}</td>`;
+        const tdReasons = document.createElement('td');
+        a.reasons.forEach(r => {
+            tdReasons.appendChild(el('span', 'risk-badge high', r));
+            tdReasons.appendChild(document.createTextNode(' '));
+        });
+        addCells(tr, [
+            { text: a.bank, strong: true },
+            { text: formatVND(a.amount), className: 'cell-amount' }
+        ]);
+        tr.appendChild(tdReasons);
         tbody.appendChild(tr);
     });
 }
 
 function renderLoansTable() {
     const tbody = document.getElementById('tbody-loans');
-    tbody.innerHTML = '';
+    tbody.textContent = '';
     document.getElementById('count-loans').textContent = DATA.loans.length;
     DATA.loans.forEach((l, idx) => {
         const days = daysFromNow(l.endDate);
         let dc = days <= 15 ? 'urgent' : days <= 45 ? 'soon' : 'ok';
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${idx+1}</td><td><strong>${l.bank}</strong></td><td class="cell-amount">${formatVND(l.amount)}</td><td class="cell-rate">${l.rate}%</td><td>${formatDate(l.startDate)}</td><td>${formatDate(l.endDate)}</td><td><span class="days-remaining ${dc}">${days > 0 ? days + ' ngày' : 'Đáo hạn!'}</span></td>`;
+        addCells(tr, [
+            { text: String(idx + 1) },
+            { text: l.bank, strong: true },
+            { text: formatVND(l.amount), className: 'cell-amount' },
+            { text: l.rate + '%', className: 'cell-rate' },
+            { text: formatDate(l.startDate) },
+            { text: formatDate(l.endDate) },
+            { html: true, el: el('span', 'days-remaining ' + dc, days > 0 ? days + ' ngày' : 'Đáo hạn!') }
+        ]);
         tbody.appendChild(tr);
     });
 }
 
 function renderInvestmentsTable() {
     const tbody = document.getElementById('tbody-investments');
-    tbody.innerHTML = '';
+    tbody.textContent = '';
     document.getElementById('count-investments').textContent = DATA.investments.length;
     DATA.investments.forEach((inv, idx) => {
         const days = daysFromNow(inv.endDate);
         let dc = days <= 15 ? 'urgent' : days <= 45 ? 'soon' : 'ok';
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${idx+1}</td><td><strong>${inv.bank}</strong></td><td><span class="type-badge ${inv.type.toLowerCase()}">${inv.type}</span></td><td class="cell-amount">${formatVND(inv.amount)}</td><td class="cell-rate">${inv.rate}%</td><td>${formatDate(inv.startDate)}</td><td>${formatDate(inv.endDate)}</td><td><span class="days-remaining ${dc}">${days > 0 ? days + ' ngày' : 'Đáo hạn!'}</span></td>`;
+        addCells(tr, [
+            { text: String(idx + 1) },
+            { text: inv.bank, strong: true },
+            { html: true, el: el('span', 'type-badge ' + inv.type.toLowerCase(), inv.type) },
+            { text: formatVND(inv.amount), className: 'cell-amount' },
+            { text: inv.rate + '%', className: 'cell-rate' },
+            { text: formatDate(inv.startDate) },
+            { text: formatDate(inv.endDate) },
+            { html: true, el: el('span', 'days-remaining ' + dc, days > 0 ? days + ' ngày' : 'Đáo hạn!') }
+        ]);
         tbody.appendChild(tr);
     });
 }
@@ -148,63 +230,84 @@ function renderInvestmentsTable() {
 // === INSIGHTS ===
 function renderInsights() {
     const grid = document.getElementById('insights-grid');
+    grid.textContent = '';
     const greenBanks = DATA.limitControls.filter(x => x.status === 'safe').sort((a, b) => b.room - a.room);
     const redBanks = DATA.limitControls.filter(x => x.status === 'danger');
 
-    let insight1 = '';
+    // Build Insight 1
+    const desc1 = document.createElement('div');
+    desc1.className = 'insight-desc';
     if (greenBanks.length > 0) {
-        insight1 = `Ưu tiên giải ngân W/C tiếp theo qua <span class="insight-highlight">${greenBanks[0].bank}</span> (room: <span class="insight-highlight">${formatVND(greenBanks[0].room)}</span>).`;
-        if (greenBanks.length > 1) insight1 += ` Tiếp theo: <span class="insight-highlight">${greenBanks[1].bank}</span> (room: ${formatVND(greenBanks[1].room)}).`;
-    }
-
-    let insight2 = '';
-    if (redBanks.length > 0) {
-        const names = redBanks.map(b => `<span class="insight-highlight">${b.bank}</span>`).join(', ');
-        insight2 = `Cần hạn chế hoặc tất toán bớt các khoản vay tại ${names} để đưa tỷ lệ sử dụng hạn mức về mức an toàn (<90%).`;
-    }
-
-    // Insight 3: Investments nearing maturity (within 30 days)
-    const now = new Date();
-    const nearMaturity = DATA.investments
-        .map(inv => ({ ...inv, daysLeft: daysFromNow(inv.endDate) }))
-        .filter(inv => inv.daysLeft > 0 && inv.daysLeft <= 30)
-        .sort((a, b) => a.daysLeft - b.daysLeft);
-
-    let insight3 = '';
-    if (nearMaturity.length > 0) {
-        const items = nearMaturity.map(inv =>
-            `<strong>${inv.bank}</strong> (${inv.type}) — <span class="insight-highlight">${formatVND(inv.amount)}</span>, đáo hạn ${formatDate(inv.endDate)} (<span class="insight-highlight">${inv.daysLeft} ngày</span>)`
-        ).join('<br>');
-        insight3 = `Các khoản đầu tư sắp đáo hạn cần roll:<br>${items}`;
-    } else {
-        // Check within 60 days if none within 30
-        const near60 = DATA.investments
-            .map(inv => ({ ...inv, daysLeft: daysFromNow(inv.endDate) }))
-            .filter(inv => inv.daysLeft > 0 && inv.daysLeft <= 60)
-            .sort((a, b) => a.daysLeft - b.daysLeft);
-        if (near60.length > 0) {
-            const items = near60.map(inv =>
-                `<strong>${inv.bank}</strong> (${inv.type}) — <span class="insight-highlight">${formatVND(inv.amount)}</span>, đáo hạn ${formatDate(inv.endDate)} (<span class="insight-highlight">${inv.daysLeft} ngày</span>)`
-            ).join('<br>');
-            insight3 = `Các khoản đầu tư đáo hạn trong 60 ngày cần chuẩn bị roll:<br>${items}`;
-        } else {
-            insight3 = 'Không có khoản đầu tư nào sắp đáo hạn trong 60 ngày tới.';
+        desc1.appendChild(document.createTextNode('Ưu tiên giải ngân W/C tiếp theo qua '));
+        desc1.appendChild(el('span', 'insight-highlight', greenBanks[0].bank));
+        desc1.appendChild(document.createTextNode(' (room: '));
+        desc1.appendChild(el('span', 'insight-highlight', formatVND(greenBanks[0].room)));
+        desc1.appendChild(document.createTextNode(').'));
+        if (greenBanks.length > 1) {
+            desc1.appendChild(document.createTextNode(' Tiếp theo: '));
+            desc1.appendChild(el('span', 'insight-highlight', greenBanks[1].bank));
+            desc1.appendChild(document.createTextNode(' (room: ' + formatVND(greenBanks[1].room) + ').'));
         }
     }
 
-    grid.innerHTML = `
-        <div class="insight-card" id="insight-1">
-            <div class="insight-number">1</div>
-            <div><div class="insight-title">🟢 Cơ hội Giải ngân</div><div class="insight-desc">${insight1}</div></div>
-        </div>
-        <div class="insight-card" id="insight-2">
-            <div class="insight-number">2</div>
-            <div><div class="insight-title">🔴 Hạ tỷ trọng</div><div class="insight-desc">${insight2}</div></div>
-        </div>
-        <div class="insight-card insight-card-full" id="insight-3">
-            <div class="insight-number">3</div>
-            <div><div class="insight-title">🔄 Khoản đầu tư cần Roll</div><div class="insight-desc">${insight3}</div></div>
-        </div>`;
+    // Build Insight 2
+    const desc2 = document.createElement('div');
+    desc2.className = 'insight-desc';
+    if (redBanks.length > 0) {
+        desc2.appendChild(document.createTextNode('Cần hạn chế hoặc tất toán bớt các khoản vay tại '));
+        redBanks.forEach((b, i) => {
+            if (i > 0) desc2.appendChild(document.createTextNode(', '));
+            desc2.appendChild(el('span', 'insight-highlight', b.bank));
+        });
+        desc2.appendChild(document.createTextNode(' để đưa tỷ lệ sử dụng hạn mức về mức an toàn (<90%).'));
+    }
+
+    // Build Insight 3
+    const desc3 = document.createElement('div');
+    desc3.className = 'insight-desc';
+    let nearList = DATA.investments
+        .map(inv => ({ ...inv, daysLeft: daysFromNow(inv.endDate) }))
+        .filter(inv => inv.daysLeft > 0 && inv.daysLeft <= 30)
+        .sort((a, b) => a.daysLeft - b.daysLeft);
+    let rollLabel = 'Các khoản đầu tư sắp đáo hạn cần roll:';
+    if (nearList.length === 0) {
+        nearList = DATA.investments
+            .map(inv => ({ ...inv, daysLeft: daysFromNow(inv.endDate) }))
+            .filter(inv => inv.daysLeft > 0 && inv.daysLeft <= 60)
+            .sort((a, b) => a.daysLeft - b.daysLeft);
+        rollLabel = 'Các khoản đầu tư đáo hạn trong 60 ngày cần chuẩn bị roll:';
+    }
+    if (nearList.length > 0) {
+        desc3.appendChild(document.createTextNode(rollLabel));
+        nearList.forEach(inv => {
+            desc3.appendChild(document.createElement('br'));
+            const b = document.createElement('strong');
+            b.textContent = inv.bank;
+            desc3.appendChild(b);
+            desc3.appendChild(document.createTextNode(' (' + inv.type + ') — '));
+            desc3.appendChild(el('span', 'insight-highlight', formatVND(inv.amount)));
+            desc3.appendChild(document.createTextNode(', đáo hạn ' + formatDate(inv.endDate) + ' ('));
+            desc3.appendChild(el('span', 'insight-highlight', inv.daysLeft + ' ngày'));
+            desc3.appendChild(document.createTextNode(')'));
+        });
+    } else {
+        desc3.textContent = 'Không có khoản đầu tư nào sắp đáo hạn trong 60 ngày tới.';
+    }
+
+    // Build cards
+    function makeCard(id, title, descEl, extraClass) {
+        const card = el('div', 'insight-card' + (extraClass ? ' ' + extraClass : ''));
+        card.id = id;
+        card.appendChild(el('div', 'insight-number', id.split('-')[1]));
+        const wrap = document.createElement('div');
+        wrap.appendChild(el('div', 'insight-title', title));
+        wrap.appendChild(descEl);
+        card.appendChild(wrap);
+        return card;
+    }
+    grid.appendChild(makeCard('insight-1', '🟢 Cơ hội Giải ngân', desc1));
+    grid.appendChild(makeCard('insight-2', '🔴 Hạ tỷ trọng', desc2));
+    grid.appendChild(makeCard('insight-3', '🔄 Khoản đầu tư cần Roll', desc3, 'insight-card-full'));
 }
 
 // === TABS ===
