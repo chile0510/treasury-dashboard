@@ -12,7 +12,9 @@ import base64
 import time
 from datetime import datetime, timezone
 
-SESSION_SECRET = os.environ.get("SESSION_SECRET", "treasury-dev-secret-key-change-in-production")
+SESSION_SECRET = os.environ.get("SESSION_SECRET")
+if not SESSION_SECRET:
+    raise RuntimeError("FATAL: SESSION_SECRET environment variable must be set")
 
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
@@ -24,7 +26,7 @@ def _get_origin(headers):
     origin = headers.get("Origin", "")
     if origin in ALLOWED_ORIGINS:
         return origin
-    return ALLOWED_ORIGINS[1]
+    return None  # reject unknown origins
 
 
 def _b64url_decode(s: str) -> bytes:
@@ -190,6 +192,12 @@ class handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         origin = _get_origin(self.headers)
+        if origin is None:
+            self.send_response(403)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"ok": False, "error": "Forbidden"}).encode())
+            return
         user = _verify_session(self.headers)
 
         if not user:

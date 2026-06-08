@@ -16,7 +16,9 @@ from datetime import datetime, timezone
 # --- Config ---
 CLIENT_ID = "573295023298-oe07ng68edmh7a6v6iknfihf7hrp6vac.apps.googleusercontent.com"
 ALLOWED_DOMAIN = "ghn.vn"
-SESSION_SECRET = os.environ.get("SESSION_SECRET", "treasury-dev-secret-key-change-in-production")
+SESSION_SECRET = os.environ.get("SESSION_SECRET")
+if not SESSION_SECRET:
+    raise RuntimeError("FATAL: SESSION_SECRET environment variable must be set")
 SESSION_MAX_AGE = 3600  # 1 hour
 
 ALLOWED_ORIGINS = [
@@ -29,7 +31,7 @@ def _get_origin(headers):
     origin = headers.get("Origin", "")
     if origin in ALLOWED_ORIGINS:
         return origin
-    return ALLOWED_ORIGINS[1]  # default to production
+    return None  # reject unknown origins
 
 
 def _b64url_encode(data: bytes) -> str:
@@ -79,6 +81,12 @@ class handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         origin = _get_origin(self.headers)
+        if origin is None:
+            self.send_response(403)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"ok": False, "error": "Forbidden"}).encode())
+            return
         try:
             # --- Read body ---
             content_length = int(self.headers.get("Content-Length", 0))
@@ -121,11 +129,7 @@ class handler(BaseHTTPRequestHandler):
                 ip = self.headers.get('X-Forwarded-For', self.client_address[0])
                 timestamp = datetime.now(timezone.utc).isoformat()
                 print(f'[AUDIT] {timestamp} | LOGIN_FAILED_DOMAIN | {email} | {ip}')
-                self._error(
-                    401,
-                    f"Access denied: only @{ALLOWED_DOMAIN} emails are allowed. Got {email}",
-                    origin,
-                )
+                self._error(401, "Access denied: email domain not allowed", origin)
                 return
 
             name = token_info.get("name", email.split("@")[0])
@@ -159,7 +163,8 @@ class handler(BaseHTTPRequestHandler):
         except json.JSONDecodeError:
             self._error(400, "Invalid JSON body", origin)
         except Exception as exc:
-            self._error(500, f"Internal error: {exc}", origin)
+            print(f"[ERROR] Unhandled exception in auth: {exc}")
+            self._error(500, "Internal server error", origin)
 
     def _error(self, code, message, origin):
         self.send_response(code)
