@@ -1,0 +1,3 @@
+# No external dependencies required.
+# All API functions use Python standard library only:
+#   json, hmac, hashlib, base64, time, urllib, http.server, os

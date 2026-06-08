@@ -1,18 +1,20 @@
 // ============================================
-// GOOGLE AUTH — Restrict to @ghn.vn domain
+// GOOGLE AUTH — Server-Side Verification
 // ============================================
 
 const ALLOWED_DOMAIN = 'ghn.vn';
 
 // Check if already authenticated this session
-(function checkExistingAuth() {
-    const savedUser = sessionStorage.getItem('treasury_user');
-    if (savedUser) {
-        const user = JSON.parse(savedUser);
-        if (user.email && user.email.endsWith('@' + ALLOWED_DOMAIN)) {
+(async function checkExistingAuth() {
+    try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+            const user = await res.json();
             showDashboard(user);
             return;
         }
+    } catch (e) {
+        // API not available, fall through to login
     }
     // Show login, hide dashboard
     document.getElementById('login-overlay').style.display = 'flex';
@@ -21,29 +23,37 @@ const ALLOWED_DOMAIN = 'ghn.vn';
     document.getElementById('app-footer').style.display = 'none';
 })();
 
-// Google Sign-In callback
-function handleGoogleLogin(response) {
-    // Decode JWT token
-    const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    const email = payload.email;
-    const name = payload.name;
-    const picture = payload.picture;
+// Google Sign-In callback — sends credential to SERVER for verification
+async function handleGoogleLogin(response) {
+    const errorEl = document.getElementById('login-error');
+    errorEl.style.display = 'none';
 
-    // Check domain
-    if (!email.endsWith('@' + ALLOWED_DOMAIN)) {
-        const errorEl = document.getElementById('login-error');
-        errorEl.textContent = '⛔ Email ' + email + ' khong duoc phep truy cap. Chi chap nhan @' + ALLOWED_DOMAIN;
+    try {
+        const res = await fetch('/api/auth/google', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ credential: response.credential })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            errorEl.textContent = data.error || 'Đăng nhập thất bại';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        // Server verified OK and set httpOnly cookie
+        showDashboard(data);
+        // Now load financial data from authenticated API
+        if (typeof loadDataAfterAuth === 'function') {
+            loadDataAfterAuth();
+        }
+
+    } catch (e) {
+        errorEl.textContent = 'Lỗi kết nối server. Vui lòng thử lại.';
         errorEl.style.display = 'block';
-
-        // Revoke the token
-        google.accounts.id.revoke(email);
-        return;
     }
-
-    // Save to session
-    const user = { email, name, picture };
-    sessionStorage.setItem('treasury_user', JSON.stringify(user));
-    showDashboard(user);
 }
 
 function showDashboard(user) {
@@ -61,18 +71,33 @@ function showDashboard(user) {
         const userBadge = document.createElement('div');
         userBadge.id = 'user-badge';
         userBadge.className = 'header-badge user-badge';
-        userBadge.innerHTML = `
-            <img src="${user.picture || ''}" alt="" class="user-avatar" onerror="this.style.display='none'">
-            <span>${user.name || user.email}</span>
-            <button id="btn-logout" class="btn-logout" title="Dang xuat">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            </button>
-        `;
+
+        // Safe DOM construction — no innerHTML with user data
+        const img = document.createElement('img');
+        img.className = 'user-avatar';
+        img.alt = '';
+        if (user.picture && user.picture.startsWith('https://')) {
+            img.src = user.picture;
+        }
+        img.onerror = function() { this.style.display = 'none'; };
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = user.name || user.email;
+
+        const logoutBtn = document.createElement('button');
+        logoutBtn.id = 'btn-logout';
+        logoutBtn.className = 'btn-logout';
+        logoutBtn.title = 'Đăng xuất';
+        logoutBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+
+        userBadge.appendChild(img);
+        userBadge.appendChild(nameSpan);
+        userBadge.appendChild(logoutBtn);
         headerRight.appendChild(userBadge);
 
-        // Logout handler
-        document.getElementById('btn-logout').addEventListener('click', () => {
-            sessionStorage.removeItem('treasury_user');
+        // Logout handler — calls server to clear httpOnly cookie
+        logoutBtn.addEventListener('click', async () => {
+            await fetch('/api/auth/logout', { method: 'POST' });
             google.accounts.id.disableAutoSelect();
             location.reload();
         });
