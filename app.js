@@ -2,7 +2,7 @@
 // TREASURY PORTFOLIO MANAGER — DASHBOARD JS
 // ============================================
 
-const DATA = {
+let DATA = {
   "summary": {
     "totalLoan": 1204420673710, "fundingRate": 6.88,
     "totalInvest": 1271603094800, "investYield": 8.76,
@@ -295,7 +295,7 @@ function setupTabs() {
 }
 
 // === INIT ===
-document.addEventListener('DOMContentLoaded', () => {
+function renderAll() {
     renderKPIs();
     renderAllocationChart();
     renderBarChart('chartLoanDist', DATA.loanByBank, 'Dư nợ', CHART_COLORS);
@@ -307,4 +307,22 @@ document.addEventListener('DOMContentLoaded', () => {
     renderInvestmentsTable();
     renderInsights();
     setupTabs();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Try to fetch live data from server.py, fallback to embedded DATA
+    fetch('/api/data')
+        .then(res => {
+            if (!res.ok) throw new Error('API not available');
+            return res.json();
+        })
+        .then(liveData => {
+            DATA = liveData;
+            console.log('[LIVE] Data loaded from Excel via API');
+            renderAll();
+        })
+        .catch(() => {
+            console.log('[STATIC] Using embedded data (Vercel mode)');
+            renderAll();
+        });
 });
