@@ -7,7 +7,7 @@ const ALLOWED_DOMAIN = 'ghn.vn';
 // Check if already authenticated this session
 (async function checkExistingAuth() {
     try {
-        const res = await fetch('/api/auth/me');
+        const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
         if (res.ok) {
             const user = await res.json();
             showDashboard(user);
@@ -31,6 +31,7 @@ async function handleGoogleLogin(response) {
     try {
         const res = await fetch('/api/auth/google', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ credential: response.credential })
         });
@@ -88,7 +89,21 @@ function showDashboard(user) {
         logoutBtn.id = 'btn-logout';
         logoutBtn.className = 'btn-logout';
         logoutBtn.title = 'Đăng xuất';
-        logoutBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+        // Safe SVG construction via DOM API
+        const svgNS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(svgNS, 'svg');
+        svg.setAttribute('width', '14'); svg.setAttribute('height', '14');
+        svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '2');
+        const path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('d', 'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4');
+        const polyline = document.createElementNS(svgNS, 'polyline');
+        polyline.setAttribute('points', '16 17 21 12 16 7');
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('x1', '21'); line.setAttribute('y1', '12');
+        line.setAttribute('x2', '9'); line.setAttribute('y2', '12');
+        svg.appendChild(path); svg.appendChild(polyline); svg.appendChild(line);
+        logoutBtn.appendChild(svg);
 
         userBadge.appendChild(img);
         userBadge.appendChild(nameSpan);
@@ -97,7 +112,7 @@ function showDashboard(user) {
 
         // Logout handler — calls server to clear httpOnly cookie
         logoutBtn.addEventListener('click', async () => {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
             google.accounts.id.disableAutoSelect();
             location.reload();
         });
