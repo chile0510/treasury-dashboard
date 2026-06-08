@@ -715,3 +715,118 @@ body {
 .animate-number {
     animation: countUp 0.5s ease both;
 }
+
+/* === Login Overlay === */
+#login-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg-primary);
+    align-items: center;
+    justify-content: center;
+}
+
+.login-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 48px 40px;
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: var(--shadow-lg), 0 0 80px rgba(59,130,246,0.08);
+    animation: fadeInUp 0.5s ease both;
+}
+
+.login-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    background: var(--gradient-blue);
+    border-radius: var(--radius-lg);
+    color: white;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-glow-blue);
+}
+
+.login-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #e8ecf4 30%, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.login-subtitle {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+}
+
+.login-error {
+    display: none;
+    margin-top: 16px;
+    padding: 10px 16px;
+    background: rgba(248,113,113,0.1);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: var(--radius-sm);
+    color: var(--accent-red);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.login-footer {
+    margin-top: 24px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+/* Google Sign-In button centering */
+.g_id_signin {
+    display: flex;
+    justify-content: center;
+}
+
+/* === User Badge in Header === */
+.user-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px 4px 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+.user-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.btn-logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: rgba(248,113,113,0.1);
+    border-radius: 50%;
+    color: var(--accent-red);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-logout:hover {
+    background: rgba(248,113,113,0.25);
+    transform: scale(1.1);
+}
+
