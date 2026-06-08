@@ -11,6 +11,7 @@ import hmac
 import hashlib
 import base64
 import time
+from datetime import datetime, timezone
 
 # --- Config ---
 CLIENT_ID = "573295023298-oe07ng68edmh7a6v6iknfihf7hrp6vac.apps.googleusercontent.com"
@@ -59,6 +60,8 @@ def _create_session_token(email: str, name: str, picture: str) -> str:
 
 
 class handler(BaseHTTPRequestHandler):
+    server_version = 'Server'
+    sys_version = ''
 
     def _set_cors(self, origin):
         self.send_header("Access-Control-Allow-Origin", origin)
@@ -70,6 +73,8 @@ class handler(BaseHTTPRequestHandler):
         origin = _get_origin(self.headers)
         self.send_response(204)
         self._set_cors(origin)
+        self.send_header('X-RateLimit-Limit', '60')
+        self.send_header('X-RateLimit-Window', '60')
         self.end_headers()
 
     def do_POST(self):
@@ -91,6 +96,9 @@ class handler(BaseHTTPRequestHandler):
                 with urllib.request.urlopen(req, timeout=10) as resp:
                     token_info = json.loads(resp.read().decode("utf-8"))
             except urllib.error.HTTPError as e:
+                ip = self.headers.get('X-Forwarded-For', self.client_address[0])
+                timestamp = datetime.now(timezone.utc).isoformat()
+                print(f'[AUDIT] {timestamp} | LOGIN_FAILED_INVALID_TOKEN | unknown | {ip}')
                 self._error(401, "Invalid token: Google rejected the credential", origin)
                 return
             except Exception as e:
@@ -110,6 +118,9 @@ class handler(BaseHTTPRequestHandler):
 
             email = token_info.get("email", "")
             if not email.endswith("@" + ALLOWED_DOMAIN):
+                ip = self.headers.get('X-Forwarded-For', self.client_address[0])
+                timestamp = datetime.now(timezone.utc).isoformat()
+                print(f'[AUDIT] {timestamp} | LOGIN_FAILED_DOMAIN | {email} | {ip}')
                 self._error(
                     401,
                     f"Access denied: only @{ALLOWED_DOMAIN} emails are allowed. Got {email}",
@@ -129,10 +140,16 @@ class handler(BaseHTTPRequestHandler):
                 f"Path=/; Max-Age={SESSION_MAX_AGE}"
             )
 
+            ip = self.headers.get('X-Forwarded-For', self.client_address[0])
+            timestamp = datetime.now(timezone.utc).isoformat()
+            print(f'[AUDIT] {timestamp} | LOGIN_SUCCESS | {email} | {ip}')
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Set-Cookie", cookie)
             self._set_cors(origin)
+            self.send_header('X-RateLimit-Limit', '60')
+            self.send_header('X-RateLimit-Window', '60')
             self.end_headers()
             self.wfile.write(json.dumps({
                 "ok": True,
@@ -148,6 +165,8 @@ class handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self._set_cors(origin)
+        self.send_header('X-RateLimit-Limit', '60')
+        self.send_header('X-RateLimit-Window', '60')
         self.end_headers()
         self.wfile.write(json.dumps({"ok": False, "error": message}).encode())
 

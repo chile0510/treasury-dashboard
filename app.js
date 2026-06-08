@@ -4,7 +4,12 @@
 // DATA is loaded from authenticated server API only.
 // No financial data is stored in this client-side file.
 
+(function() {
+'use strict';
+
 let DATA = null;
+let SESSION_TIMEOUT_ID = null;
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes auto-logout
 
 // === SAFE DOM HELPERS (XSS Prevention) ===
 function el(tag, className, textContent) {
@@ -350,7 +355,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/api/data', { credentials: 'same-origin' })
         .then(res => {
             if (res.status === 401) {
-                // Not authenticated — auth.js will handle showing login
                 console.log('[AUTH] Not authenticated, waiting for login');
                 return null;
             }
@@ -362,6 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 DATA = serverData;
                 console.log('[SECURE] Data loaded from authenticated API');
                 renderAll();
+                startSessionTimer();
             }
         })
         .catch(err => {
@@ -369,14 +374,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 });
 
-// Called by auth.js after successful login
-async function loadDataAfterAuth() {
+// Session auto-expiry timer
+function startSessionTimer() {
+    clearTimeout(SESSION_TIMEOUT_ID);
+    SESSION_TIMEOUT_ID = setTimeout(async () => {
+        console.log('[SESSION] Auto-logout after 30 minutes of inactivity');
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+        DATA = null;
+        alert('Đã hết phiên làm việc. Vui lòng đăng nhập lại.');
+        location.reload();
+    }, SESSION_TIMEOUT_MS);
+}
+
+// Reset timer on user activity
+['click', 'keydown', 'mousemove', 'scroll'].forEach(evt => {
+    document.addEventListener(evt, () => {
+        if (DATA) startSessionTimer();
+    }, { passive: true });
+});
+
+// Expose only what's needed globally
+// handleGoogleLogin is required by Google Identity Services (data-callback)
+// loadDataAfterAuth is called by auth.js after successful login
+window.loadDataAfterAuth = async function() {
     try {
         const res = await fetch('/api/data', { credentials: 'same-origin' });
         if (!res.ok) throw new Error('Failed to load data');
         DATA = await res.json();
         renderAll();
+        startSessionTimer();
     } catch (err) {
         console.error('[ERROR] Failed to load data after auth:', err.message);
     }
-}
+};
+
+})(); // End IIFE

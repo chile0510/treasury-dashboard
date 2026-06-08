@@ -10,6 +10,7 @@ import hmac
 import hashlib
 import base64
 import time
+from datetime import datetime, timezone
 
 SESSION_SECRET = os.environ.get("SESSION_SECRET", "treasury-dev-secret-key-change-in-production")
 
@@ -170,6 +171,8 @@ FINANCIAL_DATA = {
 
 
 class handler(BaseHTTPRequestHandler):
+    server_version = 'Server'
+    sys_version = ''
 
     def _set_cors(self, origin):
         self.send_header("Access-Control-Allow-Origin", origin)
@@ -181,6 +184,8 @@ class handler(BaseHTTPRequestHandler):
         origin = _get_origin(self.headers)
         self.send_response(204)
         self._set_cors(origin)
+        self.send_header('X-RateLimit-Limit', '60')
+        self.send_header('X-RateLimit-Window', '60')
         self.end_headers()
 
     def do_GET(self):
@@ -191,6 +196,8 @@ class handler(BaseHTTPRequestHandler):
             self.send_response(401)
             self.send_header("Content-Type", "application/json")
             self._set_cors(origin)
+            self.send_header('X-RateLimit-Limit', '60')
+            self.send_header('X-RateLimit-Window', '60')
             self.end_headers()
             self.wfile.write(json.dumps({
                 "ok": False,
@@ -198,10 +205,16 @@ class handler(BaseHTTPRequestHandler):
             }).encode())
             return
 
+        ip = self.headers.get('X-Forwarded-For', self.client_address[0])
+        timestamp = datetime.now(timezone.utc).isoformat()
+        print(f'[AUDIT] {timestamp} | DATA_ACCESS | {user["email"]} | {ip}')
+
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
         self._set_cors(origin)
+        self.send_header('X-RateLimit-Limit', '60')
+        self.send_header('X-RateLimit-Window', '60')
         self.end_headers()
         self.wfile.write(json.dumps(FINANCIAL_DATA, ensure_ascii=False).encode("utf-8"))
 

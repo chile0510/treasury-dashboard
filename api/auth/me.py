@@ -89,6 +89,8 @@ def verify_session(headers) -> dict | None:
 
 
 class handler(BaseHTTPRequestHandler):
+    server_version = 'Server'
+    sys_version = ''
 
     def _set_cors(self, origin):
         self.send_header("Access-Control-Allow-Origin", origin)
@@ -100,6 +102,8 @@ class handler(BaseHTTPRequestHandler):
         origin = _get_origin(self.headers)
         self.send_response(204)
         self._set_cors(origin)
+        self.send_header('X-RateLimit-Limit', '60')
+        self.send_header('X-RateLimit-Window', '60')
         self.end_headers()
 
     def do_GET(self):
@@ -110,6 +114,8 @@ class handler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self._set_cors(origin)
+            self.send_header('X-RateLimit-Limit', '60')
+            self.send_header('X-RateLimit-Window', '60')
             self.end_headers()
             self.wfile.write(json.dumps({
                 "ok": True,
@@ -119,6 +125,8 @@ class handler(BaseHTTPRequestHandler):
             self.send_response(401)
             self.send_header("Content-Type", "application/json")
             self._set_cors(origin)
+            self.send_header('X-RateLimit-Limit', '60')
+            self.send_header('X-RateLimit-Window', '60')
             self.end_headers()
             self.wfile.write(json.dumps({
                 "ok": False,
