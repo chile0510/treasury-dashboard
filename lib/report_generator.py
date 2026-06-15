@@ -1,4 +1,4 @@
-﻿"""
+"""
 Report generator for Treasury Portfolio data.
 
 Generates PDF summary reports and CSV exports for loans and investments
@@ -62,77 +62,18 @@ class _TreasuryPDF(FPDF):
     """Custom FPDF subclass with header/footer branding and Unicode support."""
 
     # Font family name used throughout the report
-    _FONT = "Helvetica"  # default fallback
+    _FONT = "DejaVu"
 
     def __init__(self) -> None:
         super().__init__(orientation="L", unit="mm", format="A4")
-        # Try to register a Unicode font for Vietnamese support
-        self._setup_unicode_font()
+        # Load bundled DejaVuSans fonts (included in lib/fonts/)
+        import os
+        fonts_dir = os.path.join(os.path.dirname(__file__), "fonts")
+        self.add_font("DejaVu", "", os.path.join(fonts_dir, "DejaVuSans.ttf"), uni=True)
+        self.add_font("DejaVu", "B", os.path.join(fonts_dir, "DejaVuSans-Bold.ttf"), uni=True)
+        self.add_font("DejaVu", "I", os.path.join(fonts_dir, "DejaVuSans-Oblique.ttf"), uni=True)
         self.add_page()
         self.set_auto_page_break(auto=True, margin=15)
-
-    def _setup_unicode_font(self) -> None:
-        """Find and register a Unicode TTF font that supports Vietnamese."""
-        import os
-        import glob
-
-        font_candidates = []
-
-        # Check common font directories
-        font_dirs = []
-        # Linux (Vercel runtime)
-        for d in ["/usr/share/fonts", "/usr/local/share/fonts"]:
-            if os.path.isdir(d):
-                font_dirs.append(d)
-        # Windows
-        windir = os.environ.get("WINDIR", "C:\\Windows")
-        win_fonts = os.path.join(windir, "Fonts")
-        if os.path.isdir(win_fonts):
-            font_dirs.append(win_fonts)
-
-        # Preferred fonts (in order of preference)
-        preferred = [
-            ("DejaVuSans.ttf", "DejaVuSans-Bold.ttf", "DejaVuSans-Oblique.ttf"),
-            ("arial.ttf", "arialbd.ttf", "ariali.ttf"),
-            ("LiberationSans-Regular.ttf", "LiberationSans-Bold.ttf", "LiberationSans-Italic.ttf"),
-            ("FreeSans.ttf", "FreeSansBold.ttf", "FreeSansOblique.ttf"),
-        ]
-
-        for regular, bold, italic in preferred:
-            for fdir in font_dirs:
-                reg_path = self._find_font(fdir, regular)
-                bold_path = self._find_font(fdir, bold)
-                italic_path = self._find_font(fdir, italic)
-                if reg_path:
-                    try:
-                        self.add_font("UnicodeFont", "", reg_path, uni=True)
-                        if bold_path:
-                            self.add_font("UnicodeFont", "B", bold_path, uni=True)
-                        else:
-                            self.add_font("UnicodeFont", "B", reg_path, uni=True)
-                        if italic_path:
-                            self.add_font("UnicodeFont", "I", italic_path, uni=True)
-                        else:
-                            self.add_font("UnicodeFont", "I", reg_path, uni=True)
-                        _TreasuryPDF._FONT = "UnicodeFont"
-                        return
-                    except Exception:
-                        pass  # Try next font
-
-    @staticmethod
-    def _find_font(directory: str, filename: str) -> str | None:
-        """Search for a font file recursively in a directory."""
-        import os
-        # Direct path
-        direct = os.path.join(directory, filename)
-        if os.path.isfile(direct):
-            return direct
-        # Recursive search
-        for root, dirs, files in os.walk(directory):
-            for f in files:
-                if f.lower() == filename.lower():
-                    return os.path.join(root, f)
-        return None
 
     # -- branded header / footer ------------------------------------------
 
