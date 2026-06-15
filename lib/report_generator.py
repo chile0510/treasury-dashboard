@@ -1,4 +1,4 @@
-"""
+﻿"""
 Report generator for Treasury Portfolio data.
 
 Generates PDF summary reports and CSV exports for loans and investments
@@ -6,7 +6,7 @@ using financial data from lib.treasury_data.
 
 Dependencies:
     - fpdf2 (PDF generation with UTF-8 support)
-    - csv, io (stdlib — CSV generation)
+    - csv, io (stdlib ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â CSV generation)
 """
 
 import csv
@@ -24,24 +24,24 @@ from lib.treasury_data import FINANCIAL_DATA
 # ---------------------------------------------------------------------------
 
 def _fmt_ty(value: float | int) -> str:
-    """Format a raw VND amount as 'X.XXX tỷ' (billions).
+    """Format a raw VND amount as 'X.XXX tÃƒÂ¡Ã‚Â»Ã‚Â·' (billions).
 
     Examples:
         >>> _fmt_ty(1_204_420_673_710)
-        '1.204 tỷ'
+        '1.204 tÃƒÂ¡Ã‚Â»Ã‚Â·'
         >>> _fmt_ty(79_744_415_313)
-        '79,7 tỷ'
+        '79,7 tÃƒÂ¡Ã‚Â»Ã‚Â·'
     """
     ty = value / 1e9
     if ty >= 100:
         # Show as integer-like with dot-thousands: 1.204
         int_ty = round(ty)
         formatted = f"{int_ty:,}".replace(",", ".")
-        return f"{formatted} tỷ"
+        return f"{formatted} tÃƒÂ¡Ã‚Â»Ã‚Â·"
     elif ty >= 10:
-        return f"{ty:,.1f} tỷ".replace(",", ".")
+        return f"{ty:,.1f} tÃƒÂ¡Ã‚Â»Ã‚Â·".replace(",", ".")
     else:
-        return f"{ty:,.2f} tỷ".replace(",", ".")
+        return f"{ty:,.2f} tÃƒÂ¡Ã‚Â»Ã‚Â·".replace(",", ".")
 
 
 def _pct(value: float) -> str:
@@ -59,19 +59,86 @@ def _rate(value: float) -> str:
 # ---------------------------------------------------------------------------
 
 class _TreasuryPDF(FPDF):
-    """Custom FPDF subclass with header/footer branding."""
+    """Custom FPDF subclass with header/footer branding and Unicode support."""
+
+    # Font family name used throughout the report
+    _FONT = "Helvetica"  # default fallback
 
     def __init__(self) -> None:
         super().__init__(orientation="L", unit="mm", format="A4")
-        # Enable UTF-8 built-in fonts (fpdf2 feature)
+        # Try to register a Unicode font for Vietnamese support
+        self._setup_unicode_font()
         self.add_page()
         self.set_auto_page_break(auto=True, margin=15)
+
+    def _setup_unicode_font(self) -> None:
+        """Find and register a Unicode TTF font that supports Vietnamese."""
+        import os
+        import glob
+
+        font_candidates = []
+
+        # Check common font directories
+        font_dirs = []
+        # Linux (Vercel runtime)
+        for d in ["/usr/share/fonts", "/usr/local/share/fonts"]:
+            if os.path.isdir(d):
+                font_dirs.append(d)
+        # Windows
+        windir = os.environ.get("WINDIR", "C:\\Windows")
+        win_fonts = os.path.join(windir, "Fonts")
+        if os.path.isdir(win_fonts):
+            font_dirs.append(win_fonts)
+
+        # Preferred fonts (in order of preference)
+        preferred = [
+            ("DejaVuSans.ttf", "DejaVuSans-Bold.ttf", "DejaVuSans-Oblique.ttf"),
+            ("arial.ttf", "arialbd.ttf", "ariali.ttf"),
+            ("LiberationSans-Regular.ttf", "LiberationSans-Bold.ttf", "LiberationSans-Italic.ttf"),
+            ("FreeSans.ttf", "FreeSansBold.ttf", "FreeSansOblique.ttf"),
+        ]
+
+        for regular, bold, italic in preferred:
+            for fdir in font_dirs:
+                reg_path = self._find_font(fdir, regular)
+                bold_path = self._find_font(fdir, bold)
+                italic_path = self._find_font(fdir, italic)
+                if reg_path:
+                    try:
+                        self.add_font("UnicodeFont", "", reg_path, uni=True)
+                        if bold_path:
+                            self.add_font("UnicodeFont", "B", bold_path, uni=True)
+                        else:
+                            self.add_font("UnicodeFont", "B", reg_path, uni=True)
+                        if italic_path:
+                            self.add_font("UnicodeFont", "I", italic_path, uni=True)
+                        else:
+                            self.add_font("UnicodeFont", "I", reg_path, uni=True)
+                        _TreasuryPDF._FONT = "UnicodeFont"
+                        return
+                    except Exception:
+                        pass  # Try next font
+
+    @staticmethod
+    def _find_font(directory: str, filename: str) -> str | None:
+        """Search for a font file recursively in a directory."""
+        import os
+        # Direct path
+        direct = os.path.join(directory, filename)
+        if os.path.isfile(direct):
+            return direct
+        # Recursive search
+        for root, dirs, files in os.walk(directory):
+            for f in files:
+                if f.lower() == filename.lower():
+                    return os.path.join(root, f)
+        return None
 
     # -- branded header / footer ------------------------------------------
 
     def header(self) -> None:  # noqa: D401
         """Page header with report title."""
-        self.set_font("Helvetica", "B", 10)
+        self.set_font(self._FONT, "B", 10)
         self.set_text_color(100, 100, 100)
         self.cell(0, 6, "Treasury Portfolio Report", align="L")
         self.ln(8)
@@ -79,7 +146,7 @@ class _TreasuryPDF(FPDF):
     def footer(self) -> None:  # noqa: D401
         """Page footer with page number."""
         self.set_y(-12)
-        self.set_font("Helvetica", "I", 8)
+        self.set_font(self._FONT, "I", 8)
         self.set_text_color(160, 160, 160)
         self.cell(0, 10, f"Trang {self.page_no()}/{{nb}}", align="C")
 
@@ -88,7 +155,7 @@ class _TreasuryPDF(FPDF):
     def section_title(self, title: str) -> None:
         """Render a coloured section heading."""
         self.ln(4)
-        self.set_font("Helvetica", "B", 12)
+        self.set_font(self._FONT, "B", 12)
         self.set_text_color(0, 51, 102)
         self.cell(0, 8, title, new_x="LMARGIN", new_y="NEXT")
         # underline
@@ -98,7 +165,7 @@ class _TreasuryPDF(FPDF):
 
     def _table_header(self, col_widths: list[float], headers: list[str]) -> None:
         """Render a table header row with a blue background."""
-        self.set_font("Helvetica", "B", 9)
+        self.set_font(self._FONT, "B", 9)
         self.set_fill_color(0, 51, 102)
         self.set_text_color(255, 255, 255)
         for w, h in zip(col_widths, headers):
@@ -116,7 +183,7 @@ class _TreasuryPDF(FPDF):
         aligns: list[str] | None = None,
     ) -> None:
         """Render one data row, optionally with zebra-striped background."""
-        self.set_font("Helvetica", "", 9)
+        self.set_font(self._FONT, "", 9)
         if even:
             self.set_fill_color(230, 237, 247)
         else:
@@ -148,38 +215,38 @@ def generate_summary_pdf() -> bytes:
     pdf.alias_nb_pages()
 
     # -- Title -------------------------------------------------------------
-    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_font(pdf._FONT, "B", 18)
     pdf.set_text_color(0, 51, 102)
     pdf.cell(0, 12, "Treasury Portfolio Report", align="C", new_x="LMARGIN", new_y="NEXT")
-    pdf.set_font("Helvetica", "", 11)
+    pdf.set_font(pdf._FONT, "", 11)
     pdf.set_text_color(80, 80, 80)
-    pdf.cell(0, 7, f"Ngay bao cao: {date.today().strftime('%d/%m/%Y')}", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 7, f"NgÃƒÂ y bÃƒÂ¡o cÃƒÂ¡o: {date.today().strftime('%d/%m/%Y')}", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
 
     # -- Summary KPIs ------------------------------------------------------
-    pdf.section_title("Tong quan danh muc")
+    pdf.section_title("TÃ¡Â»â€¢ng quan danh mÃ¡Â»Â¥c")
 
     kpi_col = 45
     kpi_labels: list[tuple[str, str]] = [
-        ("Tong Du no", _fmt_ty(summary["totalLoan"])),
-        ("Tong Dau tu", _fmt_ty(summary["totalInvest"])),
-        ("LS Huy dong BQ", _rate(summary["fundingRate"])),
-        ("LS Dau tu BQ", _rate(summary["investYield"])),
+        ("TÃ¡Â»â€¢ng DÃ†Â° nÃ¡Â»Â£", _fmt_ty(summary["totalLoan"])),
+        ("TÃ¡Â»â€¢ng Ã„ÂÃ¡ÂºÂ§u tÃ†Â°", _fmt_ty(summary["totalInvest"])),
+        ("LS Huy Ã„â€˜Ã¡Â»â„¢ng BQ", _rate(summary["fundingRate"])),
+        ("LS Ã„ÂÃ¡ÂºÂ§u tÃ†Â° BQ", _rate(summary["investYield"])),
         ("Net Spread", _rate(summary["netSpread"])),
-        ("Loi nhuan rong", _fmt_ty(summary["netPL"])),
+        ("LÃ¡Â»Â£i nhuÃ¡ÂºÂ­n rÃƒÂ²ng", _fmt_ty(summary["netPL"])),
     ]
 
-    pdf.set_font("Helvetica", "", 10)
+    pdf.set_font(pdf._FONT, "", 10)
     x_start = pdf.l_margin
     items_per_row = 3
     for idx, (label, val) in enumerate(kpi_labels):
         col_idx = idx % items_per_row
         x = x_start + col_idx * (kpi_col * 2 + 10)
         pdf.set_x(x)
-        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_font(pdf._FONT, "B", 10)
         pdf.set_text_color(60, 60, 60)
         pdf.cell(kpi_col, 7, f"{label}:", align="L")
-        pdf.set_font("Helvetica", "", 10)
+        pdf.set_font(pdf._FONT, "", 10)
         pdf.set_text_color(0, 0, 0)
         pdf.cell(kpi_col, 7, val, align="L")
         if col_idx == items_per_row - 1:
@@ -187,14 +254,14 @@ def generate_summary_pdf() -> bytes:
     pdf.ln(4)
 
     # -- Limit Controls ----------------------------------------------------
-    pdf.section_title("Han muc tin dung")
+    pdf.section_title("HÃ¡ÂºÂ¡n mÃ¡Â»Â©c tÃƒÂ­n dÃ¡Â»Â¥ng")
 
     lc_widths = [35.0, 45.0, 45.0, 25.0, 45.0, 30.0]
-    lc_headers = ["Ngan hang", "Du no", "Han muc", "Util%", "Room", "Trang thai"]
+    lc_headers = ["NgÃƒÂ¢n hÃƒÂ ng", "DÃ†Â° nÃ¡Â»Â£", "HÃ¡ÂºÂ¡n mÃ¡Â»Â©c", "Util%", "Room", "TrÃ¡ÂºÂ¡ng thÃƒÂ¡i"]
     pdf._table_header(lc_widths, lc_headers)
 
     for i, row in enumerate(data["limitControls"]):
-        status_text = "Canh bao" if row["status"] == "danger" else "An toan"
+        status_text = "CÃ¡ÂºÂ£nh bÃƒÂ¡o" if row["status"] == "danger" else "An toÃƒÂ n"
         pdf._table_row(
             lc_widths,
             [
@@ -210,10 +277,10 @@ def generate_summary_pdf() -> bytes:
         )
 
     # -- Loans -------------------------------------------------------------
-    pdf.section_title("Danh sach khoan vay")
+    pdf.section_title("Danh sÃƒÂ¡ch khoÃ¡ÂºÂ£n vay")
 
     loan_widths = [30.0, 45.0, 25.0, 35.0, 35.0]
-    loan_headers = ["Ngan hang", "So tien", "Lai suat", "Ngay bat dau", "Ngay dao han"]
+    loan_headers = ["NgÃƒÂ¢n hÃƒÂ ng", "SÃ¡Â»â€˜ tiÃ¡Â»Ân", "LÃƒÂ£i suÃ¡ÂºÂ¥t", "NgÃƒÂ y bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u", "NgÃƒÂ y Ã„â€˜ÃƒÂ¡o hÃ¡ÂºÂ¡n"]
     pdf._table_header(loan_widths, loan_headers)
 
     for i, row in enumerate(data["loans"]):
@@ -231,10 +298,10 @@ def generate_summary_pdf() -> bytes:
         )
 
     # -- Investments -------------------------------------------------------
-    pdf.section_title("Danh sach dau tu")
+    pdf.section_title("Danh sÃƒÂ¡ch Ã„â€˜Ã¡ÂºÂ§u tÃ†Â°")
 
     inv_widths = [30.0, 45.0, 25.0, 20.0, 35.0, 35.0]
-    inv_headers = ["To chuc", "So tien", "Lai suat", "Loai", "Ngay bat dau", "Ngay dao han"]
+    inv_headers = ["TÃ¡Â»â€¢ chÃ¡Â»Â©c", "SÃ¡Â»â€˜ tiÃ¡Â»Ân", "LÃƒÂ£i suÃ¡ÂºÂ¥t", "LoÃ¡ÂºÂ¡i", "NgÃƒÂ y bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u", "NgÃƒÂ y Ã„â€˜ÃƒÂ¡o hÃ¡ÂºÂ¡n"]
     pdf._table_header(inv_widths, inv_headers)
 
     for i, row in enumerate(data["investments"]):
@@ -253,17 +320,17 @@ def generate_summary_pdf() -> bytes:
         )
 
     # -- Duration Mismatches -----------------------------------------------
-    pdf.section_title("Chenh lech ky han")
+    pdf.section_title("ChÃƒÂªnh lÃ¡Â»â€¡ch kÃ¡Â»Â³ hÃ¡ÂºÂ¡n")
 
     dm_widths = [30.0, 30.0, 35.0, 35.0, 25.0, 45.0, 45.0]
     dm_headers = [
-        "DT - To chuc",
+        "Ã„ÂT - TÃ¡Â»â€¢ chÃ¡Â»Â©c",
         "Vay - NH",
-        "DT dao han",
-        "Vay dao han",
-        "Chenh (ngay)",
-        "DT - So tien",
-        "Vay - So tien",
+        "Ã„ÂT Ã„â€˜ÃƒÂ¡o hÃ¡ÂºÂ¡n",
+        "Vay Ã„â€˜ÃƒÂ¡o hÃ¡ÂºÂ¡n",
+        "ChÃƒÂªnh (ngÃƒÂ y)",
+        "Ã„ÂT - SÃ¡Â»â€˜ tiÃ¡Â»Ân",
+        "Vay - SÃ¡Â»â€˜ tiÃ¡Â»Ân",
     ]
     pdf._table_header(dm_widths, dm_headers)
 
