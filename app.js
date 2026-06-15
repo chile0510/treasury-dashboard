@@ -101,7 +101,7 @@ function renderAllocationChart() {
 function renderBarChart(canvasId, data, label, colors) {
     new Chart(document.getElementById(canvasId).getContext('2d'), {
         type: 'bar',
-        data: { labels: data.map(x => x.bank), datasets: [{ label, data: data.map(x => x.amount / 1e9), backgroundColor: colors.map(c => c + '80'), borderColor: colors, borderWidth: 1, borderRadius: 6, maxBarThickness: 48 }] },
+        data: { labels: data.map(x => x.bank), datasets: [{ label, data: data.map(x => (x.total || x.amount || 0) / 1e9), backgroundColor: colors.map(c => c + '80'), borderColor: colors, borderWidth: 1, borderRadius: 6, maxBarThickness: 48 }] },
         options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1a1f35', borderColor: 'rgba(99,115,171,0.3)', borderWidth: 1, padding: 12, callbacks: { label: (ctx) => ` ${ctx.parsed.x.toLocaleString('vi-VN')} tỷ VND` } } }, scales: { x: { grid: { color: 'rgba(99,115,171,0.08)' }, ticks: { callback: v => v.toLocaleString() + ' tỷ' } }, y: { grid: { display: false } } } }
     });
 }
@@ -111,14 +111,15 @@ function renderLimits() {
     const grid = document.getElementById('limits-grid');
     grid.textContent = '';
     DATA.limitControls.forEach((lc, idx) => {
-        const icon = lc.status === 'danger' ? '🔴' : '🟢';
+        const icon = lc.status === 'danger' ? '🔴' : lc.status === 'warning' ? '🟡' : '🟢';
         const card = document.createElement('div');
         card.className = `limit-card ${lc.status}`;
         card.id = `limit-card-${idx}`;
 
         const top = el('div', 'limit-top');
         top.appendChild(el('span', 'limit-bank', icon + ' ' + lc.bank));
-        top.appendChild(el('span', 'limit-status-badge ' + lc.status, lc.status === 'danger' ? 'Cạn Room' : 'Còn Room'));
+        const badgeText = lc.status === 'danger' ? 'Cạn Room' : lc.status === 'warning' ? 'Gần đầy' : 'Còn Room';
+        top.appendChild(el('span', 'limit-status-badge ' + lc.status, badgeText));
 
         const vals = el('div', 'limit-values');
         vals.appendChild(el('span', null, 'Dư nợ: ' + formatVND(lc.duNo)));
