@@ -172,11 +172,12 @@ function renderDurationMismatch() {
 function renderTSDB() {
     const tbody = document.getElementById('tbody-tsdb');
     tbody.textContent = '';
-    document.getElementById('count-tsdb').textContent = DATA.tsdbAnomalies.length;
-    DATA.tsdbAnomalies.forEach(a => {
+    const anomalies = DATA.tsdbAnomalies || [];
+    document.getElementById('count-tsdb').textContent = anomalies.length;
+    anomalies.forEach(a => {
         const tr = document.createElement('tr');
         const tdReasons = document.createElement('td');
-        a.reasons.forEach(r => {
+        (a.reasons || []).forEach(r => {
             tdReasons.appendChild(el('span', 'risk-badge high', r));
             tdReasons.appendChild(document.createTextNode(' '));
         });
