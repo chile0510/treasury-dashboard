@@ -205,7 +205,9 @@ function renderInsights() {
         if (greenBanks.length > 1) {
             desc1.appendChild(document.createTextNode(' Tiếp theo: '));
             desc1.appendChild(el('span', 'insight-highlight', greenBanks[1].bank));
-            desc1.appendChild(document.createTextNode(' (room: ' + formatVND(greenBanks[1].room) + ').'));
+            desc1.appendChild(document.createTextNode(' (room: '));
+            desc1.appendChild(el('span', 'insight-highlight', formatVND(greenBanks[1].room)));
+            desc1.appendChild(document.createTextNode(').'));
         }
     }
 
