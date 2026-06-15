@@ -224,20 +224,12 @@ function renderInsights() {
     // Build Insight 3
     const desc3 = document.createElement('div');
     desc3.className = 'insight-desc';
-    let nearList = DATA.investments
+    const nearList = DATA.investments
         .map(inv => ({ ...inv, daysLeft: daysFromNow(inv.endDate) }))
         .filter(inv => inv.daysLeft > 0 && inv.daysLeft <= 30)
         .sort((a, b) => a.daysLeft - b.daysLeft);
-    let rollLabel = 'Các khoản đầu tư sắp đáo hạn trong 30 ngày:';
-    if (nearList.length === 0) {
-        nearList = DATA.investments
-            .map(inv => ({ ...inv, daysLeft: daysFromNow(inv.endDate) }))
-            .filter(inv => inv.daysLeft > 0 && inv.daysLeft <= 60)
-            .sort((a, b) => a.daysLeft - b.daysLeft);
-        rollLabel = 'Các khoản đầu tư đáo hạn trong 60 ngày:';
-    }
     if (nearList.length > 0) {
-        desc3.appendChild(document.createTextNode(rollLabel));
+        desc3.appendChild(document.createTextNode('Các khoản đầu tư sắp đáo hạn trong 30 ngày:'));
         nearList.forEach(inv => {
             desc3.appendChild(document.createElement('br'));
             const b = document.createElement('strong');
@@ -250,7 +242,7 @@ function renderInsights() {
             desc3.appendChild(document.createTextNode(')'));
         });
     } else {
-        desc3.textContent = 'Không có khoản đầu tư nào sắp đáo hạn trong 60 ngày tới.';
+        desc3.textContent = 'Không có khoản đầu tư nào sắp đáo hạn trong 30 ngày tới.';
     }
 
     // Build Insight 4 — Loans maturing soon
