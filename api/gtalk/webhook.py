@@ -117,9 +117,7 @@ def parse_intent(text: str) -> tuple[str, dict]:
         bank = extract_bank(text)
         return "query_limit", {"bank": bank}
 
-    # Duration mismatch
-    if any(w in text_lower for w in ["mismatch", "duration", "lệch kỳ", "lech ky", "lệch hạn", "lech han", "kỳ hạn lệch", "ky han lech"]):
-        return "query_mismatch", {}
+
 
     # Maturity / expiring
     if any(w in text_lower for w in ["đáo hạn", "dao han", "maturity", "sắp hạn", "sap han", "expire", "hết hạn", "het han", "đến hạn", "den han"]):
@@ -162,7 +160,7 @@ def reply_help() -> str:
         "• `hạn mức` — Tất cả hạn mức ngân hàng\n"
         "• `đáo hạn` — Khoản sắp đáo hạn (<30 ngày)\n"
         "• `spread` — Lãi suất & spread hiện tại\n"
-        "• `mismatch` — Duration mismatch\n"
+
         "• `đầu tư` — Danh sách đầu tư\n"
         "• `khoản vay` — Danh sách khoản vay\n"
         "• `xuất báo cáo` — 📄 Tải PDF báo cáo\n"
@@ -174,7 +172,7 @@ def reply_help() -> str:
 def reply_summary() -> str:
     s = FINANCIAL_DATA["summary"]
     danger_banks = [lc["bank"] for lc in FINANCIAL_DATA["limitControls"] if lc["status"] == "danger"]
-    mismatches = len(FINANCIAL_DATA["durationMismatches"])
+
 
     return (
         "📊 **Treasury Portfolio — Tóm tắt**\n\n"
@@ -186,7 +184,7 @@ def reply_summary() -> str:
         f"💵 Net P&L: **+{format_vnd(s['netPL'])}**\n"
         f"📦 Tỷ trọng: TD {s['tdPct']}% | Bond {s['bondPct']}%\n\n"
         f"🔴 Room cạn: **{', '.join(danger_banks) if danger_banks else 'Không có'}**\n"
-        f"⚠️ Duration mismatch: **{mismatches} cặp**\n"
+
     )
 
 
@@ -291,21 +289,7 @@ def reply_spread() -> str:
     )
 
 
-def reply_mismatch() -> str:
-    mismatches = FINANCIAL_DATA["durationMismatches"]
-    if not mismatches:
-        return "✅ Không có duration mismatch nào."
 
-    lines = [f"⚠️ **Duration Mismatch — {len(mismatches)} cặp**\n"]
-    for dm in mismatches:
-        risk = "🔴 Cao" if dm["daysDiff"] > 30 else ("🟡 TB" if dm["daysDiff"] > 10 else "🟢 Thấp")
-        lines.append(
-            f"• **{dm['investBank']}** → **{dm['loanBank']}**: "
-            f"lệch **{dm['daysDiff']} ngày** {risk}\n"
-            f"  ĐT đáo {format_date(dm['investEnd'])} | Vay đáo {format_date(dm['loanEnd'])} | "
-            f"Số tiền: {format_vnd(dm['investAmt'])}"
-        )
-    return "\n".join(lines)
 
 
 def reply_investments() -> str:
@@ -361,7 +345,7 @@ INTENT_HANDLERS = {
     "query_limit": lambda params: reply_limit(params.get("bank")),
     "query_maturity": lambda params: reply_maturity(),
     "query_spread": lambda params: reply_spread(),
-    "query_mismatch": lambda params: reply_mismatch(),
+
     "query_investments": lambda params: reply_investments(),
     "query_loans": lambda params: reply_loans(),
     "export_report": lambda params: reply_export(),
