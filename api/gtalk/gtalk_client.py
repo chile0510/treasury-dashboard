@@ -108,3 +108,170 @@ def verify_webhook_signature(
 
     # Constant-time comparison to prevent timing attacks
     return hmac.compare_digest(signature_header, expected)
+
+
+# ============================================================
+# File Upload Flow (3-step: initiate → S3 PUT → complete)
+# ============================================================
+
+def initiate_upload(
+    channel_id: str,
+    filename: str,
+    filesize: int,
+    mimetype: str,
+) -> dict:
+    """
+    Step 1: Initiate file upload — returns presigned S3 URL and UploadId.
+    """
+    return _api_call("/api/gtalk/initiate-upload", {
+        "ChannelId": channel_id,
+        "FileName": filename,
+        "FileSize": str(filesize),  # API requires string
+        "MimeType": mimetype,
+        "Metadata": "",
+        "oaToken": GTALK_OA_TOKEN,
+    })
+
+
+def upload_to_s3(presigned_url: str, file_bytes: bytes, content_type: str) -> bool:
+    """
+    Step 2: Upload file binary to S3 presigned URL via HTTP PUT.
+    Returns True on success.
+    """
+    req = urllib.request.Request(
+        presigned_url,
+        data=file_bytes,
+        headers={"Content-Type": content_type},
+        method="PUT",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return resp.status == 200
+    except Exception as e:
+        print(f"[GTALK] S3 upload error: {e}")
+        return False
+
+
+def complete_upload(upload_id: str) -> dict:
+    """
+    Step 3: Complete upload — returns permanent fileId.
+    """
+    return _api_call("/api/gtalk/complete-upload", {
+        "oaToken": GTALK_OA_TOKEN,
+        "UploadId": upload_id,
+    })
+
+
+def send_file_message(
+    channel_id: str,
+    file_id: str,
+    filename: str,
+    mimetype: str,
+    filesize: int,
+) -> dict:
+    """Send a file attachment message to a GTalk channel."""
+    client_msg_id = str(int(time.time() * 1000))
+    return _api_call("/api/gtalk/send-message", {
+        "channelId": channel_id,
+        "clientMsgId": client_msg_id,
+        "content": {
+            "attachment": {
+                "items": [
+                    {
+                        "file": {
+                            "fileId": file_id,
+                            "fileName": filename,
+                            "mimeType": mimetype,
+                            "fileSize": filesize,
+                        }
+                    }
+                ]
+            }
+        },
+        "oaToken": GTALK_OA_TOKEN,
+    })
+
+
+def upload_and_send_file(
+    channel_id: str,
+    file_bytes: bytes,
+    filename: str,
+    mimetype: str,
+) -> dict:
+    """
+    Full file upload + send flow in one call.
+    Returns the send-message result or error dict.
+    """
+    filesize = len(file_bytes)
+
+    # Step 1: Initiate
+    init_result = initiate_upload(channel_id, filename, filesize, mimetype)
+    if init_result.get("errorCode") != "success":
+        print(f"[GTALK] initiate_upload failed: {init_result}")
+        return init_result
+
+    data = init_result.get("data", {})
+    presigned_url = data.get("PresignedURL", "")
+    upload_id = data.get("UploadId", "")
+
+    if not presigned_url or not upload_id:
+        return {"errorCode": "missing_presigned_url"}
+
+    # Step 2: Upload to S3
+    if not upload_to_s3(presigned_url, file_bytes, mimetype):
+        return {"errorCode": "s3_upload_failed"}
+
+    # Step 3: Complete
+    complete_result = complete_upload(upload_id)
+    if complete_result.get("errorCode") != "success":
+        print(f"[GTALK] complete_upload failed: {complete_result}")
+        return complete_result
+
+    file_id = complete_result.get("data", {}).get("Id", upload_id)
+
+    # Step 4: Send file message
+    return send_file_message(channel_id, file_id, filename, mimetype, filesize)
+
+
+# ============================================================
+# Template Messages (Rich Cards with Action Buttons)
+# ============================================================
+
+def send_template_message(
+    channel_id: str,
+    title: str,
+    body_html: str,
+    short_message: str,
+    actions: list[dict] | None = None,
+    icon_url: str = "",
+    template_id: str = "treasury_report",
+) -> dict:
+    """
+    Send a template message (rich card with optional action buttons).
+
+    actions format: [{"text": "View Dashboard", "style": "primary",
+                      "type": "browser_external", "url": "https://..."}]
+    """
+    template_data = {
+        "title": title,
+        "content": body_html,
+    }
+    if icon_url:
+        template_data["icon_url"] = icon_url
+    if actions:
+        template_data["actions"] = actions
+
+    client_msg_id = str(int(time.time() * 1000))
+    return _api_call("/api/gtalk/send-message", {
+        "channelId": channel_id,
+        "clientMsgId": client_msg_id,
+        "content": {
+            "template": {
+                "templateId": template_id,
+                "shortMessage": short_message,
+                "data": json.dumps(template_data, ensure_ascii=False),
+            }
+        },
+        "oaToken": GTALK_OA_TOKEN,
+    })
+

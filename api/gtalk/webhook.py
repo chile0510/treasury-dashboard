@@ -6,9 +6,10 @@ This Vercel serverless function:
 1. Receives webhook POSTs from GTalk when users send messages
 2. Verifies HMAC-SHA256 signature
 3. Sends SEEN + TYPING receipts immediately
-4. Parses user intent (keyword-based)
+4. Parses user intent (AI-powered with keyword fallback)
 5. Queries financial data
 6. Replies with formatted Markdown text
+7. Supports PDF report export via GTalk file upload
 """
 
 from http.server import BaseHTTPRequestHandler
@@ -17,15 +18,19 @@ import os
 import re
 from datetime import datetime, timezone
 
-# Import GTalk client functions (same directory, no handler class = not a serverless endpoint)
+# Import GTalk client functions
 from api.gtalk.gtalk_client import (
     send_text_message,
     send_receipt,
     verify_webhook_signature,
+    upload_and_send_file,
 )
 
 # Import shared financial data
 from lib.treasury_data import FINANCIAL_DATA
+
+# Import AI intent parser (Gemini)
+from lib.ai_parser import ai_parse_intent
 
 WEBHOOK_SECRET = os.environ.get("GTALK_WEBHOOK_SECRET", "")
 
@@ -123,6 +128,10 @@ def parse_intent(text: str) -> tuple[str, dict]:
     # Spread / rates
     if any(w in text_lower for w in ["spread", "lãi suất", "lai suat", "yield", "lãi ròng", "lai rong", "net interest"]):
         return "query_spread", {}
+
+    # Export report (check BEFORE summary to avoid 'bao cao' conflict)
+    if any(w in text_lower for w in ["export", "xuất", "xuat", "xuất báo cáo", "xuat bao cao", "tải báo cáo", "tai bao cao", "file", "csv", "excel", "pdf"]):
+        return "export_report", {}
 
     # Summary / overview
     if any(w in text_lower for w in ["tổng", "tong", "summary", "tổng quan", "tong quan", "overview", "báo cáo", "bao cao", "report", "tình hình", "tinh hinh"]):
@@ -338,6 +347,11 @@ def reply_unknown() -> str:
     )
 
 
+def reply_export() -> str:
+    """Return a placeholder — actual export is handled separately in do_POST."""
+    return "📄 Đang tạo file báo cáo PDF... vui lòng chờ."
+
+
 # Map intent → response generator
 INTENT_HANDLERS = {
     "help": lambda params: reply_help(),
@@ -348,8 +362,25 @@ INTENT_HANDLERS = {
     "query_mismatch": lambda params: reply_mismatch(),
     "query_investments": lambda params: reply_investments(),
     "query_loans": lambda params: reply_loans(),
+    "export_report": lambda params: reply_export(),
     "unknown": lambda params: reply_unknown(),
 }
+
+
+def smart_parse_intent(text: str) -> tuple[str, dict]:
+    """
+    Parse intent using AI (Gemini) first, with keyword fallback.
+    """
+    # Try AI parser first
+    ai_result = ai_parse_intent(text)
+    if ai_result is not None:
+        intent, params = ai_result
+        # Validate intent is known
+        if intent in INTENT_HANDLERS:
+            return intent, params
+
+    # Fallback to keyword parser
+    return parse_intent(text)
 
 
 def generate_reply(intent: str, params: dict) -> str:
@@ -441,18 +472,49 @@ class handler(BaseHTTPRequestHandler):
             print(f"[WEBHOOK] {timestamp} | RECEIPT result={receipt_result}")
 
         # --- 6. Parse intent & generate reply ---
-        intent, params = parse_intent(content)
-        reply_text = generate_reply(intent, params)
+        intent, params = smart_parse_intent(content)
 
         print(f"[WEBHOOK] {timestamp} | INTENT={intent} params={params}")
 
-        # --- 7. Send reply ---
+        # --- 7. Handle export separately (needs file upload) ---
+        if intent == "export_report" and channel_id:
+            self._handle_export(channel_id, timestamp)
+            self._ok_response()
+            return
+
+        # --- 7b. Send text reply ---
+        reply_text = generate_reply(intent, params)
         if channel_id:
             result = send_text_message(channel_id, reply_text)
             print(f"[WEBHOOK] {timestamp} | REPLY_RESULT={json.dumps(result, ensure_ascii=False)[:300]}")
 
         # --- 8. Return 200 OK to GTalk ---
         self._ok_response()
+
+    def _handle_export(self, channel_id: str, timestamp: str):
+        """Generate PDF report and send as file attachment."""
+        try:
+            from lib.report_generator import generate_summary_pdf
+
+            # Notify user
+            send_text_message(channel_id, "📄 Đang tạo báo cáo PDF...")
+
+            # Generate PDF
+            pdf_bytes = generate_summary_pdf()
+            filename = f"Treasury_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+
+            # Upload and send
+            result = upload_and_send_file(
+                channel_id, pdf_bytes, filename, "application/pdf"
+            )
+            print(f"[WEBHOOK] {timestamp} | EXPORT_RESULT={json.dumps(result, ensure_ascii=False)[:300]}")
+
+            if result.get("errorCode") != "success":
+                send_text_message(channel_id, f"❌ Lỗi gửi file: {result.get('errorCode', 'unknown')}")
+        except Exception as e:
+            print(f"[WEBHOOK] {timestamp} | EXPORT_ERROR={e}")
+            send_text_message(channel_id, f"❌ Lỗi tạo PDF: {str(e)}")
+
 
     def _ok_response(self):
         self.send_response(200)

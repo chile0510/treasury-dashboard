@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury × GTalk — Automation Workflow</title>
+    <meta name="description" content="Interactive automation workflow diagram for Treasury Portfolio Dashboard integrated with GHN GTalk API">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Ambient Background -->
+    <div class="ambient-bg">
+        <div class="ambient-orb ambient-orb-1"></div>
+        <div class="ambient-orb ambient-orb-2"></div>
+        <div class="ambient-orb ambient-orb-3"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="header-inner">
+            <div class="logo-group">
+                <div class="logo-icon">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                        <rect x="2" y="6" width="24" height="16" rx="3" stroke="url(#g1)" stroke-width="2"/>
+                        <path d="M8 14h12M14 10v8" stroke="url(#g1)" stroke-width="2" stroke-linecap="round"/>
+                        <defs><linearGradient id="g1" x1="2" y1="6" x2="26" y2="22"><stop stop-color="#60a5fa"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="logo-title">Treasury × GTalk</h1>
+                    <p class="logo-subtitle">Automation Workflow Design</p>
+                </div>
+            </div>
+            <nav class="header-nav">
+                <button class="nav-btn active" data-section="overview" id="nav-overview">Overview</button>
+                <button class="nav-btn" data-section="flow-daily" id="nav-daily">Daily Report</button>
+                <button class="nav-btn" data-section="flow-chatbot" id="nav-chatbot">Chatbot</button>
+                <button class="nav-btn" data-section="flow-file" id="nav-file">File Report</button>
+                <button class="nav-btn" data-section="architecture" id="nav-arch">Architecture</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+
+        <!-- ============== SECTION: OVERVIEW ============== -->
+        <section class="section active" id="section-overview">
+            <div class="section-header">
+                <span class="section-badge">System Overview</span>
+                <h2 class="section-title">Tổng quan Automation Workflow</h2>
+                <p class="section-desc">3 luồng tự động hóa kết nối Treasury Portfolio Dashboard với GHN GTalk API</p>
+            </div>
+
+            <!-- Use Case Cards -->
+            <div class="usecase-grid" id="usecase-grid">
+                <div class="usecase-card" data-target="flow-daily" id="uc-daily">
+                    <div class="uc-icon uc-icon-daily">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="4" y="4" width="24" height="24" rx="4" stroke="currentColor" stroke-width="2"/><path d="M4 12h24M12 4v8M20 4v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="20" r="2" fill="currentColor"/></svg>
+                    </div>
+                    <h3 class="uc-title">Daily/Weekly Report</h3>
+                    <p class="uc-desc">Tự động gửi portfolio summary qua GTalk theo lịch trình hàng ngày/tuần</p>
+                    <div class="uc-tags">
+                        <span class="tag tag-cron">CRON</span>
+                        <span class="tag tag-template">Template Msg</span>
+                    </div>
+                    <div class="uc-arrow">Xem chi tiết →</div>
+                </div>
+
+                <div class="usecase-card" data-target="flow-chatbot" id="uc-chatbot">
+                    <div class="uc-icon uc-icon-chatbot">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 8a4 4 0 014-4h12a4 4 0 014 4v10a4 4 0 01-4 4H14l-4 4v-4H10a4 4 0 01-4-4V8z" stroke="currentColor" stroke-width="2"/><circle cx="13" cy="13" r="1.5" fill="currentColor"/><circle cx="19" cy="13" r="1.5" fill="currentColor"/></svg>
+                    </div>
+                    <h3 class="uc-title">Chatbot Tra cứu</h3>
+                    <p class="uc-desc">Nhận câu hỏi từ user qua GTalk webhook, tra cứu portfolio data và trả lời tự động</p>
+                    <div class="uc-tags">
+                        <span class="tag tag-webhook">Webhook</span>
+                        <span class="tag tag-ai">AI/NLP</span>
+                    </div>
+                    <div class="uc-arrow">Xem chi tiết →</div>
+                </div>
+
+                <div class="usecase-card" data-target="flow-file" id="uc-file">
+                    <div class="uc-icon uc-icon-file">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M8 4h10l6 6v18a2 2 0 01-2 2H8a2 2 0 01-2-2V6a2 2 0 012-2z" stroke="currentColor" stroke-width="2"/><path d="M18 4v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10 18h12M10 22h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </div>
+                    <h3 class="uc-title">File Report (PDF/Excel)</h3>
+                    <p class="uc-desc">Generate và gửi file báo cáo PDF/Excel qua GTalk với 3-step upload flow</p>
+                    <div class="uc-tags">
+                        <span class="tag tag-s3">S3 Upload</span>
+                        <span class="tag tag-file">File Msg</span>
+                    </div>
+                    <div class="uc-arrow">Xem chi tiết →</div>
+                </div>
+            </div>
+
+            <!-- System Stats -->
+            <div class="stats-bar" id="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-value">10</span>
+                    <span class="stat-label">API Endpoints</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">3</span>
+                    <span class="stat-label">Workflow Flows</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">5</span>
+                    <span class="stat-label">Message Types</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">∞</span>
+                    <span class="stat-label">Channels</span>
+                </div>
+            </div>
+
+            <!-- High-Level Architecture Diagram -->
+            <div class="diagram-container" id="overview-diagram">
+                <h3 class="diagram-title">High-Level Integration Map</h3>
+                <div class="hld-wrapper">
+                    <div class="hld-canvas" id="hld-canvas">
+                        <!-- Left: Treasury Dashboard -->
+                        <div class="hld-node hld-node-treasury" id="hld-treasury">
+                            <div class="hld-node-icon">📊</div>
+                            <div class="hld-node-label">Treasury<br>Dashboard</div>
+                            <div class="hld-node-sub">Vercel • Python API</div>
+                        </div>
+
+                        <!-- Center: Automation Engine -->
+                        <div class="hld-node hld-node-engine" id="hld-engine">
+                            <div class="hld-node-icon">⚙️</div>
+                            <div class="hld-node-label">Automation<br>Engine</div>
+                            <div class="hld-node-sub">CRON • Webhook • AI</div>
+                        </div>
+
+                        <!-- Right: GTalk API -->
+                        <div class="hld-node hld-node-gtalk" id="hld-gtalk">
+                            <div class="hld-node-icon">💬</div>
+                            <div class="hld-node-label">GTalk<br>API</div>
+                            <div class="hld-node-sub">mbff.ghn.vn</div>
+                        </div>
+
+                        <!-- Far Right: Users -->
+                        <div class="hld-node hld-node-users" id="hld-users">
+                            <div class="hld-node-icon">👥</div>
+                            <div class="hld-node-label">Treasury<br>Team</div>
+                            <div class="hld-node-sub">GTalk App</div>
+                        </div>
+
+                        <!-- Animated Connection Lines (SVG) -->
+                        <svg class="hld-lines" id="hld-lines" viewBox="0 0 900 200">
+                            <defs>
+                                <linearGradient id="line-grad-1" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#60a5fa"/>
+                                    <stop offset="100%" stop-color="#a78bfa"/>
+                                </linearGradient>
+                                <linearGradient id="line-grad-2" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#a78bfa"/>
+                                    <stop offset="100%" stop-color="#34d399"/>
+                                </linearGradient>
+                                <linearGradient id="line-grad-3" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#34d399"/>
+                                    <stop offset="100%" stop-color="#fb923c"/>
+                                </linearGradient>
+                                <marker id="arrow-blue" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa"/>
+                                </marker>
+                                <marker id="arrow-green" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/>
+                                </marker>
+                            </defs>
+                            <!-- Lines drawn via JS -->
+                        </svg>
+
+                        <!-- Flow Labels -->
+                        <div class="hld-flow-label" id="flow-label-1">
+                            <span class="flow-label-text">Portfolio Data</span>
+                        </div>
+                        <div class="hld-flow-label" id="flow-label-2">
+                            <span class="flow-label-text">send-message</span>
+                        </div>
+                        <div class="hld-flow-label" id="flow-label-3">
+                            <span class="flow-label-text">GTalk Channel</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== SECTION: DAILY REPORT FLOW ============== -->
+        <section class="section" id="section-flow-daily">
+            <div class="section-header">
+                <button class="back-btn" data-target="overview" id="back-daily">← Back to Overview</button>
+                <span class="section-badge badge-daily">Flow #1</span>
+                <h2 class="section-title">Daily/Weekly Portfolio Summary</h2>
+                <p class="section-desc">CRON scheduler tự động fetch data từ Treasury Dashboard, format thành template message, gửi qua GTalk</p>
+            </div>
+
+            <!-- Interactive Flow -->
+            <div class="flow-container" id="flow-daily-container">
+                <div class="flow-timeline">
+                    <!-- Step 1 -->
+                    <div class="flow-step" data-step="1" id="daily-step-1">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">01</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-trigger">Trigger</span>
+                                <h4 class="step-title">CRON Scheduler</h4>
+                            </div>
+                            <p class="step-desc">Chạy vào 8:00 AM hàng ngày (hoặc 9:00 AM thứ Hai cho weekly report)</p>
+                            <div class="step-code">
+                                <code>0 8 * * * → daily_report()</code>
+                                <code>0 9 * * 1 → weekly_report()</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="flow-step" data-step="2" id="daily-step-2">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">02</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-action">Action</span>
+                                <h4 class="step-title">Fetch Portfolio Data</h4>
+                            </div>
+                            <p class="step-desc">Gọi Treasury Dashboard API lấy dữ liệu: summary, loans, investments, limits, insights</p>
+                            <div class="step-code">
+                                <code>GET /api/data</code>
+                                <code>→ totalLoan, totalInvest, netSpread, netPL...</code>
+                            </div>
+                            <div class="step-data-preview">
+                                <div class="data-row"><span>Total Loan</span><span class="data-val">1,204 tỷ</span></div>
+                                <div class="data-row"><span>Total Invest</span><span class="data-val">1,272 tỷ</span></div>
+                                <div class="data-row"><span>Net Spread</span><span class="data-val highlight-green">+1.88%</span></div>
+                                <div class="data-row"><span>Net P&L</span><span class="data-val highlight-green">+33.6 tỷ</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="flow-step" data-step="3" id="daily-step-3">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">03</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-transform">Transform</span>
+                                <h4 class="step-title">Build Template Message</h4>
+                            </div>
+                            <p class="step-desc">Format data thành GTalk Template Message với KPIs, chart summary, và action buttons</p>
+                            <div class="step-template-preview">
+                                <div class="tmpl-card">
+                                    <div class="tmpl-header">
+                                        <span class="tmpl-icon">📊</span>
+                                        <span class="tmpl-title">Treasury Daily Report — 14/06/2026</span>
+                                    </div>
+                                    <div class="tmpl-body">
+                                        <div class="tmpl-line">💰 Dư nợ: <strong>1,204 tỷ</strong> | Đầu tư: <strong>1,272 tỷ</strong></div>
+                                        <div class="tmpl-line">📈 Spread: <strong class="green">+1.88%</strong> | P&L: <strong class="green">+33.6 tỷ</strong></div>
+                                        <div class="tmpl-line">🔴 Room cạn: Cathay, VCB, Shinhan</div>
+                                        <div class="tmpl-line">⚠️ Duration mismatch: 6 cặp</div>
+                                    </div>
+                                    <div class="tmpl-actions">
+                                        <button class="tmpl-btn tmpl-btn-primary">🔗 Xem Dashboard</button>
+                                        <button class="tmpl-btn tmpl-btn-secondary">📄 Tải Report</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="flow-step" data-step="4" id="daily-step-4">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">04</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-api">API Call</span>
+                                <h4 class="step-title">GTalk: send-message</h4>
+                            </div>
+                            <p class="step-desc">POST template message tới GTalk channel của Treasury team</p>
+                            <div class="step-code">
+                                <code>POST /api/gtalk/send-message</code>
+                                <code>{</code>
+                                <code>  channelId: "treasury_team_ch",</code>
+                                <code>  content: { template: {...} },</code>
+                                <code>  oaToken: "***:***"</code>
+                                <code>}</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="flow-step" data-step="5" id="daily-step-5">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">05</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-done">Done</span>
+                                <h4 class="step-title">Delivered to Team</h4>
+                            </div>
+                            <p class="step-desc">Team nhận notification trên GTalk app, click "Xem Dashboard" để mở Treasury Dashboard trực tiếp</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== SECTION: CHATBOT FLOW ============== -->
+        <section class="section" id="section-flow-chatbot">
+            <div class="section-header">
+                <button class="back-btn" data-target="overview" id="back-chatbot">← Back to Overview</button>
+                <span class="section-badge badge-chatbot">Flow #2</span>
+                <h2 class="section-title">Chatbot Tra cứu Portfolio</h2>
+                <p class="section-desc">User gửi câu hỏi trên GTalk → Webhook → AI xử lý → Trả lời tự động</p>
+            </div>
+
+            <div class="flow-container" id="flow-chatbot-container">
+                <div class="flow-timeline">
+                    <!-- Step 1 -->
+                    <div class="flow-step" data-step="1" id="chat-step-1">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">01</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-trigger">Trigger</span>
+                                <h4 class="step-title">User gửi tin nhắn</h4>
+                            </div>
+                            <p class="step-desc">User nhắn tin trong GTalk channel: "Cho tôi biết room còn lại của BIDV"</p>
+                            <div class="chat-preview">
+                                <div class="chat-bubble chat-user">
+                                    <span class="chat-avatar">👤</span>
+                                    <div class="chat-text">Cho tôi biết room còn lại của BIDV?</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="flow-step" data-step="2" id="chat-step-2">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">02</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-webhook">Webhook</span>
+                                <h4 class="step-title">GTalk Webhook → Server</h4>
+                            </div>
+                            <p class="step-desc">GTalk POST webhook payload tới automation server, bao gồm signature verification</p>
+                            <div class="step-code">
+                                <code>POST https://your-server/webhook/gtalk</code>
+                                <code>Header: x-gtalk-event-signature: mac=...</code>
+                                <code>{</code>
+                                <code>  "content": "Cho tôi biết room...",</code>
+                                <code>  "senderId": "user_123",</code>
+                                <code>  "channelId": "ch_456",</code>
+                                <code>  "contentType": 0</code>
+                                <code>}</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="flow-step" data-step="3" id="chat-step-3">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">03</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-action">Action</span>
+                                <h4 class="step-title">Auto Receipt: SEEN + TYPING</h4>
+                            </div>
+                            <p class="step-desc">Gửi receipt SEEN + TYPING ngay lập tức để user thấy bot đang xử lý</p>
+                            <div class="step-code">
+                                <code>POST /api/gtalk/send-message-receipt</code>
+                                <code>receipts: [</code>
+                                <code>  { status: 2, ... }, // SEEN</code>
+                                <code>  { status: 3, ... }  // TYPING</code>
+                                <code>]</code>
+                            </div>
+                            <div class="typing-indicator">
+                                <span class="typing-dot"></span>
+                                <span class="typing-dot"></span>
+                                <span class="typing-dot"></span>
+                                <span class="typing-text">Bot đang nhập...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="flow-step" data-step="4" id="chat-step-4">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">04</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-transform">AI Process</span>
+                                <h4 class="step-title">Parse Intent + Query Data</h4>
+                            </div>
+                            <p class="step-desc">AI phân tích intent → Truy vấn Treasury API → Compile kết quả</p>
+                            <div class="ai-pipeline">
+                                <div class="ai-stage">
+                                    <span class="ai-stage-icon">🧠</span>
+                                    <span>NLP Parse</span>
+                                    <span class="ai-arrow">→</span>
+                                </div>
+                                <div class="ai-stage">
+                                    <span class="ai-stage-icon">🔍</span>
+                                    <span>Query DB</span>
+                                    <span class="ai-arrow">→</span>
+                                </div>
+                                <div class="ai-stage">
+                                    <span class="ai-stage-icon">📝</span>
+                                    <span>Format Reply</span>
+                                </div>
+                            </div>
+                            <div class="step-data-preview">
+                                <div class="data-row"><span>Intent</span><span class="data-val">query_limit_room</span></div>
+                                <div class="data-row"><span>Entity</span><span class="data-val">bank = BIDV</span></div>
+                                <div class="data-row"><span>Result</span><span class="data-val highlight-green">155.5 tỷ room</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="flow-step" data-step="5" id="chat-step-5">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">05</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-api">API Call</span>
+                                <h4 class="step-title">GTalk: send-message (Reply)</h4>
+                            </div>
+                            <p class="step-desc">Gửi kết quả tra cứu về GTalk channel dạng text message (Markdown)</p>
+                            <div class="chat-preview">
+                                <div class="chat-bubble chat-bot">
+                                    <span class="chat-avatar">🤖</span>
+                                    <div class="chat-text">
+                                        <strong>🏦 BIDV — Thông tin Hạn mức</strong><br>
+                                        • Dư nợ: <strong>94.5 tỷ</strong><br>
+                                        • Hạn mức: <strong>250 tỷ</strong><br>
+                                        • Sử dụng: <strong>37.8%</strong> 🟢<br>
+                                        • Room còn lại: <strong class="green">155.5 tỷ</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Supported Commands -->
+                <div class="commands-panel" id="commands-panel">
+                    <h4 class="commands-title">💡 Supported Commands</h4>
+                    <div class="commands-grid">
+                        <div class="cmd-item">
+                            <code class="cmd-text">"Tổng dư nợ hiện tại?"</code>
+                            <span class="cmd-intent">→ query_total_loan</span>
+                        </div>
+                        <div class="cmd-item">
+                            <code class="cmd-text">"Room của [bank]?"</code>
+                            <span class="cmd-intent">→ query_limit_room</span>
+                        </div>
+                        <div class="cmd-item">
+                            <code class="cmd-text">"Khoản nào sắp đáo hạn?"</code>
+                            <span class="cmd-intent">→ query_maturity</span>
+                        </div>
+                        <div class="cmd-item">
+                            <code class="cmd-text">"Spread hiện tại?"</code>
+                            <span class="cmd-intent">→ query_spread</span>
+                        </div>
+                        <div class="cmd-item">
+                            <code class="cmd-text">"Gửi report PDF"</code>
+                            <span class="cmd-intent">→ trigger_report</span>
+                        </div>
+                        <div class="cmd-item">
+                            <code class="cmd-text">"Duration mismatch?"</code>
+                            <span class="cmd-intent">→ query_mismatch</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== SECTION: FILE REPORT FLOW ============== -->
+        <section class="section" id="section-flow-file">
+            <div class="section-header">
+                <button class="back-btn" data-target="overview" id="back-file">← Back to Overview</button>
+                <span class="section-badge badge-file">Flow #3</span>
+                <h2 class="section-title">File Report (PDF/Excel) qua GTalk</h2>
+                <p class="section-desc">Generate báo cáo → 3-Step S3 Upload → Send file message qua GTalk</p>
+            </div>
+
+            <div class="flow-container" id="flow-file-container">
+                <div class="flow-timeline">
+                    <!-- Step 1 -->
+                    <div class="flow-step" data-step="1" id="file-step-1">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">01</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-trigger">Trigger</span>
+                                <h4 class="step-title">Trigger Source</h4>
+                            </div>
+                            <p class="step-desc">Có thể trigger bằng CRON (weekly), chatbot command, hoặc manual request</p>
+                            <div class="trigger-options">
+                                <div class="trigger-opt active" data-trigger="cron">🕐 CRON (Weekly)</div>
+                                <div class="trigger-opt" data-trigger="chat">💬 Chatbot CMD</div>
+                                <div class="trigger-opt" data-trigger="manual">🖱️ Manual</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="flow-step" data-step="2" id="file-step-2">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">02</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-action">Generate</span>
+                                <h4 class="step-title">Generate Report File</h4>
+                            </div>
+                            <p class="step-desc">Fetch data từ Treasury API → Render thành PDF/Excel report</p>
+                            <div class="file-types">
+                                <div class="file-type">
+                                    <span class="file-icon">📕</span>
+                                    <span>Treasury_Report_2026-06-14.pdf</span>
+                                    <span class="file-size">2.4 MB</span>
+                                </div>
+                                <div class="file-type">
+                                    <span class="file-icon">📗</span>
+                                    <span>Portfolio_Data_2026-06-14.xlsx</span>
+                                    <span class="file-size">856 KB</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="flow-step" data-step="3" id="file-step-3">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card step-card-wide">
+                            <div class="step-number">03</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-api">3-Step Upload</span>
+                                <h4 class="step-title">GTalk File Upload Flow</h4>
+                            </div>
+                            <p class="step-desc">Upload file lên S3 thông qua GTalk presigned URL flow</p>
+
+                            <div class="upload-pipeline" id="upload-pipeline">
+                                <div class="upload-stage" data-stage="init" id="upload-init">
+                                    <div class="upload-stage-num">3a</div>
+                                    <div class="upload-stage-title">Initiate Upload</div>
+                                    <div class="upload-stage-api">POST /api/gtalk/initiate-upload</div>
+                                    <div class="upload-stage-result">→ PresignedURL, UploadId</div>
+                                </div>
+                                <div class="upload-arrow">
+                                    <svg width="40" height="20"><path d="M0 10 L30 10 M25 5 L30 10 L25 15" stroke="#a78bfa" stroke-width="2" fill="none"/></svg>
+                                </div>
+                                <div class="upload-stage" data-stage="put" id="upload-put">
+                                    <div class="upload-stage-num">3b</div>
+                                    <div class="upload-stage-title">PUT to S3</div>
+                                    <div class="upload-stage-api">PUT {PresignedURL}</div>
+                                    <div class="upload-stage-result">→ 200 OK</div>
+                                </div>
+                                <div class="upload-arrow">
+                                    <svg width="40" height="20"><path d="M0 10 L30 10 M25 5 L30 10 L25 15" stroke="#a78bfa" stroke-width="2" fill="none"/></svg>
+                                </div>
+                                <div class="upload-stage" data-stage="complete" id="upload-complete">
+                                    <div class="upload-stage-num">3c</div>
+                                    <div class="upload-stage-title">Complete Upload</div>
+                                    <div class="upload-stage-api">POST /api/gtalk/complete-upload</div>
+                                    <div class="upload-stage-result">→ File Id</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="flow-step" data-step="4" id="file-step-4">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">04</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-api">API Call</span>
+                                <h4 class="step-title">GTalk: send-message (File)</h4>
+                            </div>
+                            <p class="step-desc">Gửi file message với fileId vừa nhận từ complete-upload</p>
+                            <div class="step-code">
+                                <code>POST /api/gtalk/send-message</code>
+                                <code>{</code>
+                                <code>  content: {</code>
+                                <code>    attachment: {</code>
+                                <code>      items: [{</code>
+                                <code>        file: {</code>
+                                <code>          fileId: "2009...",</code>
+                                <code>          fileName: "Treasury_Report.pdf",</code>
+                                <code>          mimeType: "application/pdf",</code>
+                                <code>          fileSize: 2516582</code>
+                                <code>        }</code>
+                                <code>      }]</code>
+                                <code>    }</code>
+                                <code>  }</code>
+                                <code>}</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="flow-step" data-step="5" id="file-step-5">
+                        <div class="step-connector"></div>
+                        <div class="step-dot"></div>
+                        <div class="step-card">
+                            <div class="step-number">05</div>
+                            <div class="step-header">
+                                <span class="step-badge badge-done">Done</span>
+                                <h4 class="step-title">File Delivered</h4>
+                            </div>
+                            <p class="step-desc">Team nhận file trên GTalk, download trực tiếp từ app</p>
+                            <div class="file-delivered-preview">
+                                <div class="delivered-file">
+                                    <span class="delivered-icon">📎</span>
+                                    <div class="delivered-info">
+                                        <span class="delivered-name">Treasury_Report_2026-06-14.pdf</span>
+                                        <span class="delivered-size">2.4 MB</span>
+                                    </div>
+                                    <button class="delivered-btn">⬇ Download</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== SECTION: ARCHITECTURE ============== -->
+        <section class="section" id="section-architecture">
+            <div class="section-header">
+                <button class="back-btn" data-target="overview" id="back-arch">← Back to Overview</button>
+                <span class="section-badge badge-arch">Technical</span>
+                <h2 class="section-title">System Architecture</h2>
+                <p class="section-desc">Chi tiết kiến trúc kỹ thuật, API endpoints, và data flow</p>
+            </div>
+
+            <!-- API Reference -->
+            <div class="api-reference" id="api-reference">
+                <h3 class="api-title">📡 GTalk API Endpoints Used</h3>
+                <div class="api-table-wrapper">
+                    <table class="api-table" id="api-table">
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Method</th>
+                                <th>Flow</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="api-row" data-flow="daily,chatbot,file">
+                                <td><code>/api/gtalk/send-message</code></td>
+                                <td><span class="method-badge post">POST</span></td>
+                                <td>
+                                    <span class="flow-tag flow-1">Daily</span>
+                                    <span class="flow-tag flow-2">Chatbot</span>
+                                    <span class="flow-tag flow-3">File</span>
+                                </td>
+                                <td>Gửi text, template, hoặc file message</td>
+                            </tr>
+                            <tr class="api-row" data-flow="chatbot">
+                                <td><code>/api/gtalk/send-message-receipt</code></td>
+                                <td><span class="method-badge post">POST</span></td>
+                                <td><span class="flow-tag flow-2">Chatbot</span></td>
+                                <td>Gửi SEEN, TYPING receipt</td>
+                            </tr>
+                            <tr class="api-row" data-flow="chatbot">
+                                <td><code>/api/gtalk/config-channel-processing</code></td>
+                                <td><span class="method-badge post">POST</span></td>
+                                <td><span class="flow-tag flow-2">Chatbot</span></td>
+                                <td>Cấu hình webhook cho channel</td>
+                            </tr>
+                            <tr class="api-row" data-flow="file">
+                                <td><code>/api/gtalk/initiate-upload</code></td>
+                                <td><span class="method-badge post">POST</span></td>
+                                <td><span class="flow-tag flow-3">File</span></td>
+                                <td>Khởi tạo upload session, lấy presigned URL</td>
+                            </tr>
+                            <tr class="api-row" data-flow="file">
+                                <td><code>/api/gtalk/complete-upload</code></td>
+                                <td><span class="method-badge post">POST</span></td>
+                                <td><span class="flow-tag flow-3">File</span></td>
+                                <td>Hoàn thành upload, lấy file Id</td>
+                            </tr>
+                            <tr class="api-row" data-flow="daily,chatbot">
+                                <td><code>/api/gtalk/create-server-direct-channel</code></td>
+                                <td><span class="method-badge post">POST</span></td>
+                                <td>
+                                    <span class="flow-tag flow-1">Daily</span>
+                                    <span class="flow-tag flow-2">Chatbot</span>
+                                </td>
+                                <td>Tạo channel giữa OA và user</td>
+                            </tr>
+                            <tr class="api-row" data-flow="chatbot">
+                                <td><code>/api/gtalk/modify-message</code></td>
+                                <td><span class="method-badge post">POST</span></td>
+                                <td><span class="flow-tag flow-2">Chatbot</span></td>
+                                <td>Sửa/xóa message đã gửi</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tech Stack -->
+            <div class="tech-stack" id="tech-stack">
+                <h3 class="api-title">🛠 Recommended Tech Stack</h3>
+                <div class="tech-grid">
+                    <div class="tech-card" id="tech-runtime">
+                        <div class="tech-icon">⚡</div>
+                        <h4>Runtime</h4>
+                        <p>Node.js / Python</p>
+                        <span class="tech-detail">Automation server</span>
+                    </div>
+                    <div class="tech-card" id="tech-scheduler">
+                        <div class="tech-icon">🕐</div>
+                        <h4>Scheduler</h4>
+                        <p>node-cron / APScheduler</p>
+                        <span class="tech-detail">Daily/weekly triggers</span>
+                    </div>
+                    <div class="tech-card" id="tech-ai">
+                        <div class="tech-icon">🧠</div>
+                        <h4>AI/NLP</h4>
+                        <p>OpenAI / Gemini</p>
+                        <span class="tech-detail">Intent parsing</span>
+                    </div>
+                    <div class="tech-card" id="tech-report">
+                        <div class="tech-icon">📊</div>
+                        <h4>Report Gen</h4>
+                        <p>Puppeteer / openpyxl</p>
+                        <span class="tech-detail">PDF/Excel generation</span>
+                    </div>
+                    <div class="tech-card" id="tech-hosting">
+                        <div class="tech-icon">☁️</div>
+                        <h4>Hosting</h4>
+                        <p>Vercel / Railway</p>
+                        <span class="tech-detail">Webhook endpoint</span>
+                    </div>
+                    <div class="tech-card" id="tech-security">
+                        <div class="tech-icon">🔐</div>
+                        <h4>Security</h4>
+                        <p>HMAC-SHA256</p>
+                        <span class="tech-detail">Webhook verification</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Env Config -->
+            <div class="env-config" id="env-config">
+                <h3 class="api-title">🔧 Environment Configuration</h3>
+                <div class="env-code">
+                    <div class="env-header">
+                        <span class="env-filename">.env</span>
+                        <span class="env-badge">Required</span>
+                    </div>
+                    <pre class="env-pre"><code class="env-content"># GTalk API
+GTALK_BASE_URL=https://mbff.ghn.vn
+GTALK_OA_TOKEN=your_oa_id:your_oa_password
+GTALK_OA_ID=your_oa_id
+GTALK_CHANNEL_ID=treasury_team_channel_id
+GTALK_WEBHOOK_SECRET=your_webhook_secret
+
+# Treasury Dashboard
+TREASURY_API_URL=https://treasury-dashboard-sepia.vercel.app/api/data
+TREASURY_SESSION_SECRET=your_session_secret
+
+# Report Generation
+REPORT_OUTPUT_DIR=./reports
+REPORT_TEMPLATE=./templates/treasury_report.html
+
+# Schedule
+DAILY_REPORT_CRON=0 8 * * *
+WEEKLY_REPORT_CRON=0 9 * * 1</code></pre>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" id="footer">
+        <div class="footer-inner">
+            <p>Treasury × GTalk Automation Workflow — Designed for GHN Treasury Team</p>
+            <p class="footer-tech">Built with HTML, CSS, JavaScript • GTalk REST API v1.0</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
