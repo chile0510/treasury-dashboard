@@ -220,13 +220,14 @@ def reply_limit(bank: str | None) -> str:
 
 def reply_maturity() -> str:
     now = datetime.now()
-    threshold_days = 30
+    inv_threshold = 45
+    loan_threshold = 30
 
     # Check investments
     expiring_inv = []
     for inv in FINANCIAL_DATA["investments"]:
         days = days_from_now(inv["endDate"])
-        if 0 < days <= threshold_days:
+        if 0 < days <= inv_threshold:
             expiring_inv.append({**inv, "daysLeft": days})
     expiring_inv.sort(key=lambda x: x["daysLeft"])
 
@@ -234,14 +235,14 @@ def reply_maturity() -> str:
     expiring_loans = []
     for loan in FINANCIAL_DATA["loans"]:
         days = days_from_now(loan["endDate"])
-        if 0 < days <= threshold_days:
+        if 0 < days <= loan_threshold:
             expiring_loans.append({**loan, "daysLeft": days})
     expiring_loans.sort(key=lambda x: x["daysLeft"])
 
-    lines = ["⏰ **Khoản sắp đáo hạn (≤30 ngày)**\n"]
+    lines = ["⏰ **Khoản sắp đáo hạn**\n"]
 
     if expiring_inv:
-        lines.append("**📈 Đầu tư:**")
+        lines.append("**📈 Đầu tư (≤45 ngày):**")
         for inv in expiring_inv:
             lines.append(
                 f"• **{inv['bank']}** ({inv['type']}) — {format_vnd(inv['amount'])} "
@@ -249,12 +250,12 @@ def reply_maturity() -> str:
                 f"(**{inv['daysLeft']} ngày**)"
             )
     else:
-        lines.append("📈 Đầu tư: _Không có khoản nào đáo hạn trong 30 ngày_")
+        lines.append("📈 Đầu tư: _Không có khoản nào đáo hạn trong 45 ngày_")
 
     lines.append("")
 
     if expiring_loans:
-        lines.append("**💰 Khoản vay:**")
+        lines.append("**💰 Khoản vay (≤30 ngày):**")
         for loan in expiring_loans:
             lines.append(
                 f"• **{loan['bank']}** — {format_vnd(loan['amount'])} "
