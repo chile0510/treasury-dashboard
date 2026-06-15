@@ -142,54 +142,6 @@ function renderLimits() {
 }
 
 // === TABLES ===
-function renderDurationMismatch() {
-    const tbody = document.getElementById('tbody-duration');
-    tbody.textContent = '';
-    document.getElementById('count-duration').textContent = DATA.durationMismatches.length;
-    if (DATA.durationMismatches.length === 0) {
-        const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.colSpan = 7; td.style.cssText = 'text-align:center;color:var(--accent-green);padding:24px;';
-        td.textContent = '✅ Tất cả các khoản khớp kỳ hạn';
-        tr.appendChild(td); tbody.appendChild(tr); return;
-    }
-    DATA.durationMismatches.forEach(dm => {
-        let rc = 'low', rl = 'Thấp';
-        if (dm.daysDiff > 30) { rc = 'high'; rl = 'Cao'; } else if (dm.daysDiff > 10) { rc = 'medium'; rl = 'TB'; }
-        const tr = document.createElement('tr');
-        addCells(tr, [
-            { text: dm.investBank, strong: true },
-            { text: dm.loanBank },
-            { text: formatDate(dm.investEnd) },
-            { text: formatDate(dm.loanEnd) },
-            { text: '+' + dm.daysDiff + ' ngày', className: 'cell-days', style: 'color:' + (rc === 'high' ? 'var(--accent-red)' : rc === 'medium' ? 'var(--accent-yellow)' : 'var(--accent-green)') },
-            { text: formatVND(dm.investAmt), className: 'cell-amount' },
-            { html: true, el: el('span', 'risk-badge ' + rc, rl) }
-        ]);
-        tbody.appendChild(tr);
-    });
-}
-
-function renderTSDB() {
-    const tbody = document.getElementById('tbody-tsdb');
-    tbody.textContent = '';
-    const anomalies = DATA.tsdbAnomalies || [];
-    document.getElementById('count-tsdb').textContent = anomalies.length;
-    anomalies.forEach(a => {
-        const tr = document.createElement('tr');
-        const tdReasons = document.createElement('td');
-        (a.reasons || []).forEach(r => {
-            tdReasons.appendChild(el('span', 'risk-badge high', r));
-            tdReasons.appendChild(document.createTextNode(' '));
-        });
-        addCells(tr, [
-            { text: a.bank, strong: true },
-            { text: formatVND(a.amount), className: 'cell-amount' }
-        ]);
-        tr.appendChild(tdReasons);
-        tbody.appendChild(tr);
-    });
-}
 
 function renderLoansTable() {
     const tbody = document.getElementById('tbody-loans');
@@ -378,8 +330,7 @@ function renderAll() {
     renderBarChart('chartLoanDist', DATA.loanByBank, 'Dư nợ', CHART_COLORS);
     renderBarChart('chartInvestDist', DATA.investByBank, 'Đầu tư', ['#22d3ee', '#34d399', '#a78bfa', '#fb923c']);
     renderLimits();
-    renderDurationMismatch();
-    renderTSDB();
+
     renderLoansTable();
     renderInvestmentsTable();
     renderInsights();

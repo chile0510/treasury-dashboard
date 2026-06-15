@@ -153,53 +153,6 @@
             </div>
         </section>
 
-        <!-- ====== SECTION 3: EXCEPTION REPORT ====== -->
-        <section class="dashboard-section" id="section-exceptions">
-            <div class="section-header">
-                <h2><span class="section-icon">⚠️</span> Cảnh Báo Ngoại Lệ <span class="section-tag danger">EXCEPTION REPORT</span></h2>
-            </div>
-
-            <!-- Tab navigation -->
-            <div class="tab-nav" id="exception-tabs">
-                <button class="tab-btn active" data-tab="tab-duration" id="btn-tab-duration">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
-                    Duration Mismatch <span class="tab-count" id="count-duration">0</span>
-                </button>
-                <button class="tab-btn" data-tab="tab-tsdb" id="btn-tab-tsdb">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    TSĐB Bất thường <span class="tab-count" id="count-tsdb">0</span>
-                </button>
-            </div>
-
-            <div class="tab-content active" id="tab-duration">
-                <table class="data-table" id="table-duration">
-                    <thead>
-                        <tr>
-                            <th>Đầu tư</th>
-                            <th>Khoản vay</th>
-                            <th>Đáo hạn ĐT</th>
-                            <th>Đáo hạn Vay</th>
-                            <th>Lệch (ngày)</th>
-                            <th>Số tiền ĐT</th>
-                            <th>Mức rủi ro</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody-duration"></tbody>
-                </table>
-            </div>
-            <div class="tab-content" id="tab-tsdb">
-                <table class="data-table" id="table-tsdb">
-                    <thead>
-                        <tr>
-                            <th>Ngân hàng</th>
-                            <th>Số tiền TSĐB</th>
-                            <th>Lý do</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody-tsdb"></tbody>
-                </table>
-            </div>
-        </section>
 
         <!-- ====== SECTION 4: DETAIL TABLES ====== -->
         <section class="dashboard-section" id="section-details">
