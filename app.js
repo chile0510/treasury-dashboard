@@ -301,6 +301,39 @@ function renderInsights() {
         desc3.textContent = 'Không có khoản đầu tư nào sắp đáo hạn trong 60 ngày tới.';
     }
 
+    // Build Insight 4 — Loans maturing soon
+    const desc4 = document.createElement('div');
+    desc4.className = 'insight-desc';
+    let nearLoans = DATA.loans
+        .map(l => ({ ...l, daysLeft: daysFromNow(l.endDate) }))
+        .filter(l => l.daysLeft > 0 && l.daysLeft <= 30)
+        .sort((a, b) => a.daysLeft - b.daysLeft);
+    let loanLabel = 'Các khoản vay sắp đáo hạn trong 30 ngày — cần chuẩn bị tất toán hoặc gia hạn:';
+    if (nearLoans.length === 0) {
+        nearLoans = DATA.loans
+            .map(l => ({ ...l, daysLeft: daysFromNow(l.endDate) }))
+            .filter(l => l.daysLeft > 0 && l.daysLeft <= 60)
+            .sort((a, b) => a.daysLeft - b.daysLeft);
+        loanLabel = 'Các khoản vay đáo hạn trong 60 ngày — cần lên kế hoạch:';
+    }
+    if (nearLoans.length > 0) {
+        desc4.appendChild(document.createTextNode(loanLabel));
+        nearLoans.forEach(l => {
+            desc4.appendChild(document.createElement('br'));
+            const b = document.createElement('strong');
+            b.textContent = l.bank;
+            desc4.appendChild(b);
+            desc4.appendChild(document.createTextNode(' — '));
+            desc4.appendChild(el('span', 'insight-highlight', formatVND(l.amount)));
+            desc4.appendChild(document.createTextNode(' @ ' + l.rate + '%, đáo hạn ' + formatDate(l.endDate) + ' ('));
+            const urgency = l.daysLeft <= 15 ? 'insight-highlight-urgent' : 'insight-highlight';
+            desc4.appendChild(el('span', urgency, l.daysLeft + ' ngày'));
+            desc4.appendChild(document.createTextNode(')'));
+        });
+    } else {
+        desc4.textContent = 'Không có khoản vay nào sắp đáo hạn trong 60 ngày tới.';
+    }
+
     // Build cards
     function makeCard(id, title, descEl, extraClass) {
         const card = el('div', 'insight-card' + (extraClass ? ' ' + extraClass : ''));
@@ -315,6 +348,7 @@ function renderInsights() {
     grid.appendChild(makeCard('insight-1', '🟢 Cơ hội Giải ngân', desc1));
     grid.appendChild(makeCard('insight-2', '🔴 Hạ tỷ trọng', desc2));
     grid.appendChild(makeCard('insight-3', '🔄 Khoản đầu tư cần Roll', desc3, 'insight-card-full'));
+    grid.appendChild(makeCard('insight-4', '⏰ Khoản vay sắp đáo hạn', desc4, 'insight-card-full'));
 }
 
 // === TABS ===
