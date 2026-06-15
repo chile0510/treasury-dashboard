@@ -62,10 +62,10 @@ def format_date(date_str: str) -> str:
 
 
 def days_from_now(date_str: str) -> int:
-    """Calculate days between now and a date string."""
+    """Calculate days between now and a date string (date-level, not time-level)."""
     try:
-        target = datetime.strptime(date_str, "%Y-%m-%d")
-        now = datetime.now()
+        target = datetime.strptime(date_str, "%Y-%m-%d").date()
+        now = datetime.now().date()
         return (target - now).days
     except ValueError:
         return 0
