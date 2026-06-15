@@ -371,6 +371,7 @@ body {
 }
 
 .limit-card.danger { border-left: 3px solid var(--accent-red); }
+.limit-card.warning { border-left: 3px solid var(--accent-yellow); }
 .limit-card.safe { border-left: 3px solid var(--accent-green); }
 
 .limit-top {
@@ -397,6 +398,11 @@ body {
 .limit-status-badge.danger {
     background: rgba(248,113,113,0.15);
     color: var(--accent-red);
+}
+
+.limit-status-badge.warning {
+    background: rgba(251,191,36,0.15);
+    color: var(--accent-yellow);
 }
 
 .limit-status-badge.safe {
@@ -433,6 +439,11 @@ body {
     box-shadow: 0 0 10px rgba(248,113,113,0.3);
 }
 
+.limit-card.warning .limit-progress-bar {
+    background: linear-gradient(90deg, var(--accent-yellow), var(--accent-orange));
+    box-shadow: 0 0 10px rgba(251,191,36,0.3);
+}
+
 .limit-card.safe .limit-progress-bar {
     background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
     box-shadow: 0 0 10px rgba(52,211,153,0.3);
@@ -445,6 +456,7 @@ body {
 }
 
 .limit-card.danger .limit-util { color: var(--accent-red); }
+.limit-card.warning .limit-util { color: var(--accent-yellow); }
 .limit-card.safe .limit-util { color: var(--accent-green); }
 
 .limit-room {
