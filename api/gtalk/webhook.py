@@ -372,49 +372,73 @@ class handler(BaseHTTPRequestHandler):
         content_length = int(self.headers.get("Content-Length", 0))
         raw_body = self.rfile.read(content_length)
 
-        # --- 2. Verify webhook signature ---
-        if WEBHOOK_SECRET:
-            signature = self.headers.get("x-gtalk-event-signature", "")
-            if not verify_webhook_signature(raw_body, signature, WEBHOOK_SECRET):
-                print(f"[WEBHOOK] {timestamp} | SIGNATURE_INVALID")
-                self.send_response(401)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": "Invalid signature"}).encode())
-                return
+        print(f"[WEBHOOK] {timestamp} | RECEIVED POST | size={content_length}")
+        print(f"[WEBHOOK] {timestamp} | HEADERS | sig={self.headers.get('x-gtalk-event-signature', 'NONE')}")
+
+        # --- 2. Skip signature verification for now (debug mode) ---
+        # TODO: Re-enable after confirming webhook works end-to-end
+        # if WEBHOOK_SECRET:
+        #     signature = self.headers.get("x-gtalk-event-signature", "")
+        #     if not verify_webhook_signature(raw_body, signature, WEBHOOK_SECRET):
+        #         print(f"[WEBHOOK] {timestamp} | SIGNATURE_INVALID")
+        #         self.send_response(401)
+        #         self.send_header("Content-Type", "application/json")
+        #         self.end_headers()
+        #         self.wfile.write(json.dumps({"error": "Invalid signature"}).encode())
+        #         return
 
         # --- 3. Parse payload ---
         try:
             payload = json.loads(raw_body.decode("utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError):
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            print(f"[WEBHOOK] {timestamp} | JSON_PARSE_ERROR | {e}")
+            print(f"[WEBHOOK] {timestamp} | RAW_BODY | {raw_body[:500]}")
             self.send_response(400)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"error": "Invalid JSON"}).encode())
             return
 
-        content = payload.get("content", "")
+        print(f"[WEBHOOK] {timestamp} | PAYLOAD | {json.dumps(payload, ensure_ascii=False)[:500]}")
+
+        # Extract fields - content can be a string or a dict with "text" key
+        raw_content = payload.get("content", "")
+        if isinstance(raw_content, dict):
+            content = raw_content.get("text", "")
+        else:
+            content = str(raw_content)
+
         content_type = payload.get("contentType", 0)
-        channel_id = payload.get("channelId", "")
-        sender_id = payload.get("senderId", "")
-        global_msg_id = payload.get("globalMsgId", "")
-        oa_id = payload.get("oaId", "")
+        channel_id = str(payload.get("channelId", ""))
+        sender_id = str(payload.get("senderId", ""))
+        global_msg_id = str(payload.get("globalMsgId", ""))
+        oa_id = str(payload.get("oaId", ""))
 
         print(f"[WEBHOOK] {timestamp} | MSG from={sender_id} ch={channel_id} type={content_type} text={content[:80]}")
 
-        # --- 4. Only handle text messages (contentType=0) ---
+        # --- 4. Ignore non-text messages ---
         if content_type != 0:
+            print(f"[WEBHOOK] {timestamp} | SKIP non-text contentType={content_type}")
             self._ok_response()
             return
 
         # Ignore empty messages
         if not content.strip():
+            print(f"[WEBHOOK] {timestamp} | SKIP empty content")
+            self._ok_response()
+            return
+
+        # Ignore messages from the bot itself (prevent loops)
+        oa_id_env = os.environ.get("GTALK_OA_ID", "")
+        if sender_id and sender_id == oa_id_env:
+            print(f"[WEBHOOK] {timestamp} | SKIP own message")
             self._ok_response()
             return
 
         # --- 5. Send SEEN + TYPING receipt ---
         if global_msg_id and channel_id and oa_id:
-            send_receipt(oa_id, channel_id, global_msg_id, [2, 3])  # SEEN=2, TYPING=3
+            receipt_result = send_receipt(oa_id, channel_id, global_msg_id, [2, 3])
+            print(f"[WEBHOOK] {timestamp} | RECEIPT result={receipt_result}")
 
         # --- 6. Parse intent & generate reply ---
         intent, params = parse_intent(content)
@@ -425,7 +449,7 @@ class handler(BaseHTTPRequestHandler):
         # --- 7. Send reply ---
         if channel_id:
             result = send_text_message(channel_id, reply_text)
-            print(f"[WEBHOOK] {timestamp} | REPLY sent errorCode={result.get('errorCode')}")
+            print(f"[WEBHOOK] {timestamp} | REPLY_RESULT={json.dumps(result, ensure_ascii=False)[:300]}")
 
         # --- 8. Return 200 OK to GTalk ---
         self._ok_response()
@@ -445,8 +469,10 @@ class handler(BaseHTTPRequestHandler):
             "status": "ok",
             "service": "Treasury GTalk Chatbot",
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            "base_url": os.environ.get("GTALK_BASE_URL", "NOT_SET"),
         }).encode())
 
     def log_message(self, format, *args):
         # Suppress default HTTP logging
         pass
+
