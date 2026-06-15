@@ -156,7 +156,7 @@ def parse_intent(text: str) -> tuple[str, dict]:
 def reply_help() -> str:
     return (
         "📋 **Treasury Bot — Danh sách lệnh**\n\n"
-        "Bạn có thể hỏi tôi bằng tiếng Việt hoặc tiếng Anh:\n\n"
+        "Bạn có thể hỏi tôi bằng tiếng Việt tự nhiên hoặc dùng lệnh:\n\n"
         "• `tổng quan` — Tóm tắt portfolio\n"
         "• `room BIDV` — Hạn mức & room của ngân hàng\n"
         "• `hạn mức` — Tất cả hạn mức ngân hàng\n"
@@ -165,7 +165,9 @@ def reply_help() -> str:
         "• `mismatch` — Duration mismatch\n"
         "• `đầu tư` — Danh sách đầu tư\n"
         "• `khoản vay` — Danh sách khoản vay\n"
-        "• `help` — Xem lại menu này\n"
+        "• `xuất báo cáo` — 📄 Tải PDF báo cáo\n"
+        "• `help` — Xem lại menu này\n\n"
+        "💡 _Bot hỗ trợ AI — bạn có thể hỏi tự nhiên, ví dụ: \"BIDV còn bao nhiêu room?\"_\n"
     )
 
 
