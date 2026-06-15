@@ -267,8 +267,57 @@
     <footer id="app-footer">
         <p>Treasury Portfolio Manager AI — Dữ liệu cập nhật đến ngày <span id="footer-date">--/--/----</span></p>
     </footer>
+    <!-- ====== CHAT WIDGET ====== -->
+    <div id="chat-widget">
+        <button id="chat-fab" title="Trợ lý Treasury AI">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+            <span id="chat-fab-badge" class="chat-fab-badge" style="display:none;">1</span>
+        </button>
+        <div id="chat-panel" class="chat-panel hidden">
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <div class="chat-avatar">🤖</div>
+                    <div>
+                        <div class="chat-title">GTrea — Trợ lý Treasury</div>
+                        <div class="chat-status"><span class="chat-status-dot"></span> Online</div>
+                    </div>
+                </div>
+                <button id="chat-close" class="chat-close-btn" title="Đóng">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div id="chat-messages" class="chat-messages">
+                <div class="chat-msg bot">
+                    <div class="chat-msg-bubble">
+                        Xin chào! 👋 Tôi là <strong>GTrea</strong> — trợ lý Treasury AI.<br><br>
+                        Bạn có thể hỏi tôi về:<br>
+                        • Tổng quan portfolio<br>
+                        • Hạn mức tín dụng<br>
+                        • Khoản sắp đáo hạn<br>
+                        • Lãi suất, spread<br><br>
+                        Hoặc bấm nhanh bên dưới 👇
+                    </div>
+                </div>
+            </div>
+            <div class="chat-quick-actions">
+                <button class="chat-quick-btn" data-msg="tong quan">📊 Tổng quan</button>
+                <button class="chat-quick-btn" data-msg="dao han">⏰ Đáo hạn</button>
+                <button class="chat-quick-btn" data-msg="han muc">🏦 Hạn mức</button>
+                <button class="chat-quick-btn" data-msg="lai suat">📈 Lãi suất</button>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Nhập câu hỏi..." autocomplete="off" />
+                <button id="chat-send" title="Gửi">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
     <script src="auth.js"></script>
+    <script src="chat.js"></script>
 </body>
 </html>
