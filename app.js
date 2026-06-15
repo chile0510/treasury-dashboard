@@ -101,7 +101,7 @@ function renderAllocationChart() {
 function renderBarChart(canvasId, data, label, colors) {
     new Chart(document.getElementById(canvasId).getContext('2d'), {
         type: 'bar',
-        data: { labels: data.map(x => x.bank), datasets: [{ label, data: data.map(x => (x.total || x.amount || 0) / 1e9), backgroundColor: colors.map(c => c + '80'), borderColor: colors, borderWidth: 1, borderRadius: 6, maxBarThickness: 48 }] },
+        data: { labels: data.map(x => x.bank), datasets: [{ label, data: data.map(x => (x.total || x.amount || 0) / 1e9), backgroundColor: colors.slice(0, data.length).map(c => c + '80'), borderColor: colors.slice(0, data.length), borderWidth: 1, borderRadius: 6, maxBarThickness: 48 }] },
         options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1a1f35', borderColor: 'rgba(99,115,171,0.3)', borderWidth: 1, padding: 12, callbacks: { label: (ctx) => ` ${ctx.parsed.x.toLocaleString('vi-VN')} tỷ VND` } } }, scales: { x: { grid: { color: 'rgba(99,115,171,0.08)' }, ticks: { callback: v => v.toLocaleString() + ' tỷ' } }, y: { grid: { display: false } } } }
     });
 }
@@ -228,13 +228,13 @@ function renderInsights() {
         .map(inv => ({ ...inv, daysLeft: daysFromNow(inv.endDate) }))
         .filter(inv => inv.daysLeft > 0 && inv.daysLeft <= 30)
         .sort((a, b) => a.daysLeft - b.daysLeft);
-    let rollLabel = 'Các khoản đầu tư sắp đáo hạn cần roll:';
+    let rollLabel = 'Các khoản đầu tư sắp đáo hạn trong 30 ngày:';
     if (nearList.length === 0) {
         nearList = DATA.investments
             .map(inv => ({ ...inv, daysLeft: daysFromNow(inv.endDate) }))
             .filter(inv => inv.daysLeft > 0 && inv.daysLeft <= 60)
             .sort((a, b) => a.daysLeft - b.daysLeft);
-        rollLabel = 'Các khoản đầu tư đáo hạn trong 60 ngày cần chuẩn bị roll:';
+        rollLabel = 'Các khoản đầu tư đáo hạn trong 60 ngày:';
     }
     if (nearList.length > 0) {
         desc3.appendChild(document.createTextNode(rollLabel));
@@ -299,7 +299,7 @@ function renderInsights() {
     }
     grid.appendChild(makeCard('insight-1', '🟢 Cơ hội Giải ngân', desc1));
     grid.appendChild(makeCard('insight-2', '🔴 Hạ tỷ trọng', desc2));
-    grid.appendChild(makeCard('insight-3', '🔄 Khoản đầu tư cần Roll', desc3, 'insight-card-full'));
+    grid.appendChild(makeCard('insight-3', '🔄 Khoản đầu tư sắp đáo hạn', desc3, 'insight-card-full'));
     grid.appendChild(makeCard('insight-4', '⏰ Khoản vay sắp đáo hạn', desc4, 'insight-card-full'));
 }
 
@@ -327,8 +327,8 @@ function renderAll() {
 
     renderKPIs();
     renderAllocationChart();
-    renderBarChart('chartLoanDist', DATA.loanByBank, 'Dư nợ', CHART_COLORS);
-    renderBarChart('chartInvestDist', DATA.investByBank, 'Đầu tư', ['#22d3ee', '#34d399', '#a78bfa', '#fb923c']);
+    renderBarChart('chartLoanDist', [...DATA.loanByBank].sort((a, b) => (b.total || 0) - (a.total || 0)), 'Dư nợ', CHART_COLORS);
+    renderBarChart('chartInvestDist', [...DATA.investByBank].sort((a, b) => (b.total || 0) - (a.total || 0)), 'Đầu tư', ['#22d3ee', '#34d399', '#a78bfa', '#fb923c']);
     renderLimits();
 
     renderLoansTable();
