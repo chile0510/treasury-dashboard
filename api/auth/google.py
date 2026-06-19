@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 
 # --- Config ---
 CLIENT_ID = "573295023298-oe07ng68edmh7a6v6iknfihf7hrp6vac.apps.googleusercontent.com"
-ALLOWED_DOMAIN = "ghn.vn"
+ALLOWED_DOMAINS = ["ghn.vn", "scommerce.asia"]
 SESSION_SECRET = os.environ.get("SESSION_SECRET")
 if not SESSION_SECRET:
     raise RuntimeError("FATAL: SESSION_SECRET environment variable must be set")
@@ -127,7 +127,7 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             email = token_info.get("email", "")
-            if not email.endswith("@" + ALLOWED_DOMAIN):
+            if not any(email.endswith("@" + d) for d in ALLOWED_DOMAINS):
                 ip = self.headers.get('X-Forwarded-For', self.client_address[0])
                 timestamp = datetime.now(timezone.utc).isoformat()
                 print(f'[AUDIT] {timestamp} | LOGIN_FAILED_DOMAIN | {email} | {ip}')

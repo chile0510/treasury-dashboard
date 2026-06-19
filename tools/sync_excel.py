@@ -13,6 +13,12 @@ import json
 import subprocess
 from datetime import datetime, date
 
+# Force UTF-8 output on Windows (cp1252 can't handle Vietnamese)
+if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+if sys.stderr and hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
 import openpyxl
 
 # ---------------------------------------------------------------------------
@@ -114,7 +120,20 @@ def _status_flag(util_pct):
 def parse_excel(filepath: str) -> dict:
     """Parse the Treasury Excel file and return FINANCIAL_DATA dict."""
     print(f"[SYNC] Reading: {filepath}")
-    wb = openpyxl.load_workbook(filepath, data_only=True)
+
+    # Copy to temp file to avoid PermissionError when Excel has the file open
+    import shutil
+    import tempfile
+    tmp_dir = tempfile.gettempdir()
+    tmp_path = os.path.join(tmp_dir, "treasury_sync_temp.xlsx")
+    try:
+        shutil.copy2(filepath, tmp_path)
+        print(f"[SYNC] Copied to temp: {tmp_path}")
+    except PermissionError:
+        print(f"[SYNC] WARNING: Cannot copy file (locked). Trying direct read...")
+        tmp_path = filepath
+
+    wb = openpyxl.load_workbook(tmp_path, data_only=True)
     ws = wb["Mapping"]
 
     # ---- 1. Limit Controls (rows 2-7, cols H-K) ----
