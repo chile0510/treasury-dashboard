@@ -85,6 +85,9 @@ function renderKPIs() {
     document.getElementById('kpi-invest-yield').textContent = s.investYield + '%';
     document.getElementById('kpi-spread-value').textContent = '+' + s.netSpread + '%';
     animateValue(document.getElementById('kpi-pl-value'), 0, s.netPL, 1200, (v) => '+' + formatVND(v));
+    if (s.netPLCumulative) {
+        animateValue(document.getElementById('kpi-pl-cumulative'), 0, s.netPLCumulative, 1200, (v) => '+' + formatVND(v));
+    }
     animateValue(document.getElementById('kpi-tsdb-value'), 0, s.totalTSDB, 1200, formatVND);
     animateValue(document.getElementById('kpi-hanmuc-value'), 0, s.totalHanMuc, 1200, formatVND);
 }

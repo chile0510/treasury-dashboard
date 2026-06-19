@@ -292,6 +292,11 @@ body {
     color: var(--text-muted);
 }
 
+.kpi-sub-cumulative {
+    margin-top: 2px;
+    font-size: 0.72rem;
+}
+
 .kpi-highlight {
     font-weight: 600;
     padding: 1px 6px;

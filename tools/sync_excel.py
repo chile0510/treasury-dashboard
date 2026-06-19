@@ -227,6 +227,9 @@ def parse_excel(filepath: str) -> dict:
     else:
         net_pl = total_invest * invest_yield / 100 - total_loan * funding_rate / 100
 
+    # Net P&L lũy kế from F6
+    net_pl_cumulative = _num(_cell(ws, 6, COL_SUMMARY_INTEREST))
+
     # Investment breakdown
     td_amount = sum(i["amount"] for i in investments if i["type"] == "TD")
     bond_amount = sum(i["amount"] for i in investments if i["type"] == "BOND")
@@ -245,6 +248,7 @@ def parse_excel(filepath: str) -> dict:
         "investYield": round(invest_yield, 2),
         "netSpread": net_spread,
         "netPL": net_pl,
+        "netPLCumulative": net_pl_cumulative,
         "tdPct": td_pct,
         "bondPct": bond_pct,
         "tdAmount": td_amount,
